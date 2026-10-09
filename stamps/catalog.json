@@ -1,0 +1,32 @@
+{
+  "stamps": [
+    {
+      "id": "001",
+      "slug": "dina_alef-bold",
+      "text": "דינה",
+      "rtl": true,
+      "font": "Alef-Bold.ttf",
+      "width_mm": 30,
+      "depth_mm": 20,
+      "height_mm": 20,
+      "relief_mm": 2.0,
+      "margin_mm": 2.5,
+      "id_label": {"font": "Rubik-Bold.ttf", "height_mm": 5, "depth_mm": 0.6},
+      "notes": "Classic Hebrew sans, bold. 2 mm relief."
+    },
+    {
+      "id": "002",
+      "slug": "dina_rubik-bold",
+      "text": "דינה",
+      "rtl": true,
+      "font": "Rubik-Bold.ttf",
+      "width_mm": 30,
+      "depth_mm": 20,
+      "height_mm": 20,
+      "relief_mm": 2.0,
+      "margin_mm": 2.5,
+      "id_label": {"font": "Rubik-Bold.ttf", "height_mm": 5, "depth_mm": 0.6},
+      "notes": "Rounded, heavier strokes - may release from clay more cleanly. 2 mm relief."
+    }
+  ]
+}
