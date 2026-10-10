@@ -60,12 +60,22 @@ LIP_T = 3.0
 LIP_H = 8.0            # lip height along the phone
 LIP_W = 14.0           # lips only at the two corners, screen stays clear
 RIB_T = 3.0
-P0 = (35.0, 18.0)      # back-bottom corner of the phone (x, z)
-# Cable path: slot through the ledge, then a tunnel out of the front.
-CABLE_W = 15.0
-CABLE_N = (1.5, 11.0)  # slot extent across the phone thickness
-CABLE_LEN = 45.0       # along the phone axis, below the ledge
-TUNNEL_H = 12.0
+P0 = (35.0, 21.0)      # back-bottom corner of the phone (x, z): high enough
+                       # that a 28 mm plug boot clears the bay floor at 45 deg
+# Cable path: a slot through the ledge along the phone axis, open towards the
+# screen side so the cable drops in from the front, then a notch in the base
+# so the cable lies on the bay floor. Sized for plug boots up to 13 x 7.5 mm
+# and 28 mm long, with the phone shifted up to 1.5 mm sideways.
+CABLE_W = 20.0
+CABLE_N = (-0.5, 40.0)  # slot extent across the phone thickness
+CABLE_LEN = 60.0        # along the phone axis, below the ledge
+TUNNEL_H = 8.0
+
+# Plug envelope the stand is checked against (from the case face outwards).
+PLUG_BOOT = (12.5, 7.0, 28.0)   # width, thickness, rigid length
+PLUG_PORT_N = (4.5, 5.5, 6.5)   # port centre above the phone's back, per case
+PLUG_SHIFT = (-1.5, 0.0, 1.5)   # phone sliding sideways between the guides
+CABLE_D = 5.0
 
 TEST_T = 2.0           # fit-test plate thickness
 VARIANTS = [35, 40, 45]
@@ -146,9 +156,41 @@ def build_stand(angle):
     # Cable path: plug slot along the phone axis + tunnel out of the front.
     y0, y1 = W / 2 - CABLE_W / 2, W / 2 + CABLE_W / 2
     plug = quad(P, -CABLE_LEN, 2, *CABLE_N)
-    tunnel = rect(-1, P(-CABLE_LEN, CABLE_N[1])[0] + CABLE_W, -1, TUNNEL_H)
+    tunnel = rect(-1, x_front + 1, -1, TUNNEL_H)
     solid -= side_extrude(plug + tunnel, y0, y1)
     return solid
+
+
+def check_cable_fit(angle, stand):
+    """Assert the phone, a USB-C plug boot and its cable all clear the stand.
+
+    The boot sticks straight out of the phone's bottom along the phone axis;
+    the cable carries on along that axis to the bay floor, then runs out of
+    the front of the bay on the floor. Every port height / sideways shift
+    combination must have zero overlap with the stand and keep the boot
+    above the floor.
+    """
+    P = frame(angle)
+    a = math.radians(angle)
+    phone = side_extrude(quad(P, 0.05, PHONE_L, 0.05, PHONE_T - 1),
+                         W / 2 - PHONE_W / 2 - 1, W / 2 + PHONE_W / 2 - 1)
+    assert (stand ^ phone).volume() < 0.01, f"{angle} deg: phone hits the stand"
+    bw, bt, bl = PLUG_BOOT
+    r = CABLE_D / 2
+    for n_c in PLUG_PORT_N:
+        boot_cs = quad(P, -bl, 0, n_c - bt / 2, n_c + bt / 2)
+        low = P(-bl, n_c - bt / 2)[1]
+        assert low > 0.5, f"{angle} deg: plug boot hits the bay floor ({low:.1f} mm)"
+        drop = (P(-bl, n_c)[1] - r) / math.sin(a)
+        cable_cs = quad(P, -bl - drop, -bl, n_c - r, n_c + r) + rect(
+            -5, P(-bl - drop, n_c)[0] + r, 0.01, CABLE_D)
+        for dy in PLUG_SHIFT:
+            yc = W / 2 + dy
+            boot = side_extrude(boot_cs, yc - bw / 2, yc + bw / 2)
+            cable = side_extrude(cable_cs, yc - r, yc + r)
+            hit = (stand ^ boot).volume() + (stand ^ cable).volume()
+            assert hit < 0.01, f"{angle} deg: plug/cable hits the stand (port {n_c}, shift {dy})"
+    return min(P(-bl, n - bt / 2)[1] for n in PLUG_PORT_N)
 
 
 def build_test_plate():
@@ -171,7 +213,7 @@ def phone_outline(P):
 
 def render_preview(angle, tm, path):
     P = frame(angle)
-    fig = plt.figure(figsize=(13, 5.2))
+    fig = plt.figure(figsize=(13, 5.8))
 
     # Side view: stand profile, phone, plug and the vent frame height.
     ax = fig.add_subplot(1, 2, 1)
@@ -179,10 +221,21 @@ def render_preview(angle, tm, path):
         P, -LEDGE_T, LIP_H, SLOT_T, SLOT_T + LIP_T) + rect(0, D, 0, BASE_T)
     for ring in side.to_polygons():
         ax.fill(*np.vstack([ring, ring[:1]]).T, color="#4a6fa5")
+    # The centre strip is cut away for the plug and cable.
+    slot = (quad(P, -CABLE_LEN, 2, *CABLE_N) + rect(-1, P(-LEDGE_T, SLOT_T + LIP_T)[0] + 1, -1, TUNNEL_H)) ^ side
+    for i, ring in enumerate(slot.to_polygons()):
+        ax.fill(*np.vstack([ring, ring[:1]]).T, facecolor="#dfe7f2", edgecolor="#4a6fa5", hatch="//",
+                lw=0.8, label=f"cable slot ({CABLE_W:.0f} mm wide, centre)" if i == 0 else None)
     ph = phone_outline(P)
     ax.fill(ph[:, 0], ph[:, 1], color="#cccccc", alpha=0.7, label="phone with case")
-    plug = np.array([P(0, 6), P(-30, 6)])
-    ax.plot(plug[:, 0], plug[:, 1], color="#e07b39", lw=4, label="USB-C plug")
+    bw, bt, bl = PLUG_BOOT
+    n_c = PLUG_PORT_N[1]
+    boot = np.array([P(0, n_c - bt / 2), P(-bl, n_c - bt / 2), P(-bl, n_c + bt / 2),
+                     P(0, n_c + bt / 2), P(0, n_c - bt / 2)])
+    ax.fill(boot[:, 0], boot[:, 1], color="#e07b39", label=f"USB-C plug ({bl:.0f} mm boot)")
+    drop = (P(-bl, n_c)[1] - CABLE_D / 2) / math.sin(math.radians(angle))
+    cable = np.array([P(-bl, n_c), P(-bl - drop, n_c), (-12, CABLE_D / 2)])
+    ax.plot(cable[:, 0], cable[:, 1], color="#e07b39", lw=3, alpha=0.6)
     ax.axhline(FRAME_CLEARANCE, color="#999999", ls="--", lw=1)
     ax.text(2, FRAME_CLEARANCE + 2, f"vent frame underside ({FRAME_CLEARANCE:.0f} mm)", color="#666666")
     ax.axvline(BAY_D, color="#999999", ls=":", lw=1)
@@ -239,11 +292,15 @@ def main():
     for angle in VARIANTS:
         if wanted and angle not in wanted:
             continue
-        tm = to_trimesh(build_stand(angle), f"stand {angle}")
+        stand = build_stand(angle)
+        floor_gap = check_cable_fit(angle, stand)
+        tm = to_trimesh(stand, f"stand {angle}")
         path = out_dir / f"seal_u_phone_stand_{angle}deg.stl"
         tm.export(path)
         render_preview(angle, tm, out_dir / f"seal_u_phone_stand_{angle}deg_preview.png")
         report(path, tm)
+        print(f"   cable check OK: {PLUG_BOOT[2]:.0f} mm plug boot, "
+              f"{floor_gap:.1f} mm above the bay floor at worst")
 
 
 if __name__ == "__main__":
