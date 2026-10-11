@@ -47,7 +47,7 @@ CHG_FROM_BOTTOM = 41.0  # phone bottom edge to the charger's lower edge
 
 # --- Stand ------------------------------------------------------------------
 SKIN = 0.6             # plastic between puck and phone
-CLEAR_T = 0.5          # thickness clearance (charger rests on the back wall)
+CLEAR_T = 1.0          # thickness clearance (charger rests on the back wall)
 CLEAR_W = 1.0          # width clearance
 CLEAR_U = 0.5          # clearance at the bottom stop
 LIP_OUT = 5.0          # charger sticks out of the opening by this much
@@ -67,7 +67,7 @@ N_PUCK = -SKIN                               # pocket ceiling over the puck
 N_SQUARE = N_PUCK - PUCK_H - CLEAR_T / 2     # ceiling over the square
 N_BACK = N_PUCK - CHG_T - CLEAR_T            # pocket back wall
 POCKET_W = CHG_ACROSS + CLEAR_W
-CHANNEL_W = PUCK_D + 1.0
+CHANNEL_W = PUCK_D + 3.0  # 1.5 mm each side: 1 mm was too tight in the test print
 
 TEST_L = 10.0          # pocket fit-test frame length
 
