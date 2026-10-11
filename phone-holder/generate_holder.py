@@ -53,7 +53,8 @@ PLATE_T = 4.0          # back plate under the phone
 WALL_T = (W - 78.0) / 2  # side walls -> 78 mm between the phone guides
 GUIDE_H = 4.0          # side guides above the back plate
 GUIDE_L = 60.0         # guide length from the ledge (stays clear of buttons)
-SUPPORT_L = 110.0      # back plate length along the phone
+SUPPORT_L = GUIDE_L + 5  # back plate ends 5 mm past the side guides, so the
+                         # stand stays under the vent frame
 LEDGE_T = 4.0
 SLOT_T = PHONE_T + 0.5  # gap between back plate and front lip
 LIP_T = 3.0
@@ -149,7 +150,8 @@ def build_stand(angle):
     cuts = [0, WALL_T, WALL_T + LIP_W, W / 2 - RIB_T / 2, W / 2 + RIB_T / 2,
             W - WALL_T - LIP_W, W - WALL_T, W]
     profiles = [full + side + lip, full + lip, full, full + wedge_cs, full, full + lip, full + side + lip]
-    solid = base_plate(BASE_T)
+    # The base starts at the front block: no tabs in front of it.
+    solid = base_plate(BASE_T) ^ m3d.Manifold.cube([D, W, BASE_T + 2]).translate([x_front, 0, -1])
     for y0, y1, prof in zip(cuts, cuts[1:], profiles):
         solid += side_extrude(prof, y0, y1)
 
@@ -218,7 +220,7 @@ def render_preview(angle, tm, path):
     # Side view: stand profile, phone, plug and the vent frame height.
     ax = fig.add_subplot(1, 2, 1)
     side = wedge(P) + quad(P, 0, GUIDE_L, -PLATE_T, GUIDE_H) + quad(
-        P, -LEDGE_T, LIP_H, SLOT_T, SLOT_T + LIP_T) + rect(0, D, 0, BASE_T)
+        P, -LEDGE_T, LIP_H, SLOT_T, SLOT_T + LIP_T) + rect(P(-LEDGE_T, SLOT_T + LIP_T)[0], D, 0, BASE_T)
     for ring in side.to_polygons():
         ax.fill(*np.vstack([ring, ring[:1]]).T, color="#4a6fa5")
     # The centre strip is cut away for the plug and cable.
@@ -267,7 +269,7 @@ def render_preview(angle, tm, path):
     ax3.set_title("Printed part (flat base on the bed)")
     ax3.set_axis_off()
 
-    fig.suptitle(f"BYD Seal U phone stand - {angle}° - {W:.1f} x {D:.0f} mm footprint")
+    fig.suptitle(f"BYD Seal U phone stand - {angle}° - {W:.1f} x {tm.extents[0]:.0f} mm footprint")
     fig.tight_layout()
     fig.savefig(path, dpi=110)
     plt.close(fig)
@@ -295,6 +297,7 @@ def main():
         stand = build_stand(angle)
         floor_gap = check_cable_fit(angle, stand)
         tm = to_trimesh(stand, f"stand {angle}")
+        assert tm.bounds[1][2] < FRAME_CLEARANCE, f"{angle} deg: stand hits the vent frame"
         path = out_dir / f"seal_u_phone_stand_{angle}deg.stl"
         tm.export(path)
         render_preview(angle, tm, out_dir / f"seal_u_phone_stand_{angle}deg_preview.png")
