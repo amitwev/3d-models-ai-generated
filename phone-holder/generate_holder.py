@@ -72,6 +72,14 @@ CABLE_W = 20.0
 CABLE_N = (-0.5, 40.0)  # slot extent across the phone thickness
 CABLE_LEN = 60.0        # along the phone axis, below the ledge
 TUNNEL_H = 8.0
+# Cable clip: a slit tube standing on the bed against the front face, beside
+# the plug slot. A 3-5 mm cable snaps in through the slit and is held upright,
+# so the plug stays parked at the stand instead of lying loose in the car.
+CLIP_ID = 5.4          # bore: holds 3-5 mm cables
+CLIP_WALL = 1.8
+CLIP_GAP = 2.6         # slit the cable snaps through
+CLIP_H = 22.0
+CLIP_Y = 20.0          # clip axis from the stand's centre line
 
 # Plug envelope the stand is checked against (from the case face outwards).
 PLUG_BOOT = (12.5, 7.0, 28.0)   # width, thickness, rigid length
@@ -161,7 +169,23 @@ def build_stand(angle):
     plug = quad(P, -CABLE_LEN, 2, *CABLE_N)
     tunnel = rect(-1, x_front + 1, -1, TUNNEL_H)
     solid -= side_extrude(plug + tunnel, y0, y1)
-    return solid
+    return solid + cable_clip(x_front)
+
+
+def clip_axis(x_front):
+    return x_front - CLIP_ID / 2 - CLIP_WALL + 0.8, W / 2 + CLIP_Y
+
+
+def cable_clip(x_front):
+    """Slit tube on the bed, opening forwards, with a funnel into the slit."""
+    xc, yc = clip_axis(x_front)
+    r_in, r_out = CLIP_ID / 2, CLIP_ID / 2 + CLIP_WALL
+    ring = (m3d.CrossSection.circle(r_out, 48) - m3d.CrossSection.circle(r_in, 48)
+            + m3d.CrossSection.square([r_out, 2 * r_out]).translate([0, -r_out]))  # web to the face
+    slit = cs(oriented([(0, -CLIP_GAP / 2), (-r_in, -CLIP_GAP / 2), (-r_out - 0.5, -CLIP_GAP / 2 - 1.6),
+                        (-r_out - 0.5, CLIP_GAP / 2 + 1.6), (-r_in, CLIP_GAP / 2), (0, CLIP_GAP / 2)]))
+    plan = (ring - slit - m3d.CrossSection.circle(r_in, 48)).translate([xc, yc])
+    return m3d.Manifold.extrude(plan, CLIP_H)
 
 
 def check_cable_fit(angle, stand):
@@ -193,6 +217,11 @@ def check_cable_fit(angle, stand):
             cable = side_extrude(cable_cs, yc - r, yc + r)
             hit = (stand ^ boot).volume() + (stand ^ cable).volume()
             assert hit < 0.01, f"{angle} deg: plug/cable hits the stand (port {n_c}, shift {dy})"
+    # Clip bore stays open for a 5 mm cable, and the clip clears the plug.
+    xc, yc = clip_axis(P(-LEDGE_T, SLOT_T + LIP_T)[0])
+    bore = m3d.Manifold.cylinder(CLIP_H + 2, 2.5, circular_segments=48).translate([xc, yc, -1])
+    assert (stand ^ bore).volume() < 0.01, f"{angle} deg: cable clip bore is blocked"
+    assert yc - CLIP_ID / 2 - CLIP_WALL > W / 2 + bw / 2 + max(PLUG_SHIFT) + 2, "clip too close to the plug"
     return min(P(-bl, n - bt / 2)[1] for n in PLUG_PORT_N)
 
 
