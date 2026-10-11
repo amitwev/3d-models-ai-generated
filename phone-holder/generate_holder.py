@@ -57,8 +57,9 @@ SUPPORT_L = GUIDE_L + 5  # back plate ends 5 mm past the side guides, so the
                          # stand stays under the vent frame
 LEDGE_T = 4.0
 SLOT_T = PHONE_T + 0.5  # gap between back plate and front lip
-LIP_T = 3.0
-LIP_H = 8.0            # lip height along the phone
+LIP_T = 4.5
+LIP_H = 16.0           # lip height along the phone (holds the phone, whose
+                       # centre of gravity sits past the short back plate)
 LIP_W = 14.0           # lips only at the two corners, screen stays clear
 RIB_T = 3.0
 P0 = (35.0, 21.0)      # back-bottom corner of the phone (x, z): high enough
