@@ -5,8 +5,10 @@ The stand drops into the left charging bay of the centre console (inside the
 small rubber tabs: 85 x 170 mm) and is held by the tabs alone - no adhesive,
 no vent clip. The phone stands in portrait, bottom edge towards the gear
 selector, leaning back at `angle` degrees from the bay floor, screen facing
-the driver. A slot in the bottom ledge lets a straight USB-C plug pass down
-into a tunnel that leads the cable out of the front of the stand.
+the driver. A Lightning plug stands fixed in a pocket in the bottom ledge, tip
+up along the phone axis, so the phone plugs itself in as it is lowered into
+the stand (a dock); the cable is clamped in a groove and leaves through the
+front of the stand.
 
 Coordinates: x = depth into the bay (0 = front edge, towards the gear
 selector), y = across the bay, z = up from the bay floor.
@@ -38,7 +40,7 @@ BAY_W = 85.0           # bay width between the rubber tabs
 BAY_D = 170.0          # bay depth between the rubber tabs
 FRAME_CLEARANCE = 70.0  # bay floor to the underside of the vent frame
 
-# --- Phone (iPhone 14 Pro / Galaxy S24, S25 with case) ----------------------
+# --- Phone (iPhone 14 Pro with case; the cradle also takes a Galaxy S24/S25) -
 PHONE_T = 12.0         # max thickness with case (owner measured 11)
 PHONE_W = 76.0         # max width with case
 PHONE_L = 152.0        # max length with case
@@ -64,28 +66,33 @@ LIP_W = 14.0           # lips only at the two corners, screen stays clear
 RIB_T = 3.0
 P0 = (35.0, 21.0)      # back-bottom corner of the phone (x, z): high enough
                        # that a 28 mm plug boot clears the bay floor at 45 deg
-# Cable path: a slot through the ledge along the phone axis, open towards the
-# screen side so the cable drops in from the front, then a notch in the base
-# so the cable lies on the bay floor. Sized for plug boots up to 13 x 7.5 mm
-# and 28 mm long, with the phone shifted up to 1.5 mm sideways.
-CABLE_W = 20.0
-CABLE_N = (-0.5, 40.0)  # slot extent across the phone thickness
-CABLE_LEN = 60.0        # along the phone axis, below the ledge
-TUNNEL_H = 8.0
-# Cable clip: a slit tube standing on the bed against the front face, beside
-# the plug slot. A 3-5 mm cable snaps in through the slit and is held upright,
-# so the plug stays parked at the stand instead of lying loose in the car.
-CLIP_ID = 5.4          # bore: holds 3-5 mm cables
-CLIP_WALL = 1.8
-CLIP_GAP = 2.6         # slit the cable snaps through
-CLIP_H = 22.0
-CLIP_Y = 20.0          # clip axis from the stand's centre line
 
-# Plug envelope the stand is checked against (from the case face outwards).
-PLUG_BOOT = (12.5, 7.0, 28.0)   # width, thickness, rigid length
-PLUG_PORT_N = (4.5, 5.5, 6.5)   # port centre above the phone's back, per case
-PLUG_SHIFT = (-1.5, 0.0, 1.5)   # phone sliding sideways between the guides
-CABLE_D = 5.0
+# --- Lightning dock (iPhone 14 Pro with case) -------------------------------
+# The plug boot sits in a pocket in the ledge with its tip pointing up the
+# phone axis. The phone leans on the back plate under its own weight, so the
+# plug only has to sit at the port's distance from the case back; sideways
+# the plug itself centres the phone (the guides leave +-1 mm). Lifting the
+# phone off leaves the plug in place: the cable is snapped into a pinch below
+# the pocket that keeps the boot from being pulled out.
+DOCK_PORT_N = 5.5      # port centre above the case back: 3.9 (half of the
+                       # 7.85 mm phone) + ~1.6 case back - measure your case
+DOCK_BOOT = (8.0, 5.3, 12.0)   # plug boot width, thickness, rigid length
+                               # (Apple cable; measure third-party ones)
+DOCK_TIP_L = 6.7       # metal tip length
+DOCK_RISE = 0.5        # boot top above the ledge: reaches into the case's
+                       # port opening so the tip goes in deeper
+DOCK_FIT = 0.15        # pocket clearance per side: snug push fit
+DOCK_RELIEF_W = 4.6    # groove for the boot's strain relief
+DOCK_RELIEF_L = 9.0
+DOCK_CABLE_D = 3.0     # cable diameter at the pinch
+DOCK_PINCH_L = 6.0
+DOCK_WALL = 2.5
+DOCK_BLOCK_W = 16.0    # dock block width across the stand
+DOCK_DEPTH = DOCK_BOOT[2] - DOCK_RISE
+DOCK_PINCH_C = -DOCK_DEPTH - DOCK_RELIEF_L   # pinch: c from here down by DOCK_PINCH_L
+DOCK_L = DOCK_DEPTH + DOCK_RELIEF_L + DOCK_PINCH_L + DOCK_WALL
+DOCK_TOP_N = DOCK_PORT_N + DOCK_BOOT[1] / 2 + DOCK_FIT + DOCK_WALL
+DOCK_CASE_BOTTOM = 1.5  # typical case thickness under the phone (for the report)
 
 TEST_T = 2.0           # fit-test plate thickness
 VARIANTS = [35, 40, 45]
@@ -164,65 +171,104 @@ def build_stand(angle):
     for y0, y1, prof in zip(cuts, cuts[1:], profiles):
         solid += side_extrude(prof, y0, y1)
 
-    # Cable path: plug slot along the phone axis + tunnel out of the front.
-    y0, y1 = W / 2 - CABLE_W / 2, W / 2 + CABLE_W / 2
-    plug = quad(P, -CABLE_LEN, 2, *CABLE_N)
-    tunnel = rect(-1, x_front + 1, -1, TUNNEL_H)
-    solid -= side_extrude(plug + tunnel, y0, y1)
-    return solid + cable_clip(x_front)
+    solid += side_extrude(dock_block(P), W / 2 - DOCK_BLOCK_W / 2, W / 2 + DOCK_BLOCK_W / 2)
+    return solid - dock_cuts().transform(dock_frame(angle))
 
 
-def clip_axis(x_front):
-    return x_front - CLIP_ID / 2 - CLIP_WALL + 0.8, W / 2 + CLIP_Y
+def dock_block(P):
+    """Side profile of the solid around the plug pocket, down to the floor."""
+    front = P(-DOCK_L, DOCK_TOP_N)
+    return m3d.CrossSection.hull_points([
+        P(0, DOCK_TOP_N), front, (front[0], 0), (P(-LEDGE_T, -PLATE_T)[0], 0),
+        P(-LEDGE_T, -PLATE_T), P(0, -PLATE_T)])
 
 
-def cable_clip(x_front):
-    """Slit tube on the bed, opening forwards, with a funnel into the slit."""
-    xc, yc = clip_axis(x_front)
-    r_in, r_out = CLIP_ID / 2, CLIP_ID / 2 + CLIP_WALL
-    ring = (m3d.CrossSection.circle(r_out, 48) - m3d.CrossSection.circle(r_in, 48)
-            + m3d.CrossSection.square([r_out, 2 * r_out]).translate([0, -r_out]))  # web to the face
-    slit = cs(oriented([(0, -CLIP_GAP / 2), (-r_in, -CLIP_GAP / 2), (-r_out - 0.5, -CLIP_GAP / 2 - 1.6),
-                        (-r_out - 0.5, CLIP_GAP / 2 + 1.6), (-r_in, CLIP_GAP / 2), (0, CLIP_GAP / 2)]))
-    plan = (ring - slit - m3d.CrossSection.circle(r_in, 48)).translate([xc, yc])
-    return m3d.Manifold.extrude(plan, CLIP_H)
+def dock_frame(angle):
+    """3x4 matrix from dock coordinates (a across the stand, b out of the
+    screen, c along the phone axis; origin at P(0, 0) on the centre line)."""
+    a = math.radians(angle)
+    u = [math.cos(a), 0, math.sin(a)]
+    n = [-math.sin(a), 0, math.cos(a)]
+    return np.array([[0, n[0], u[0], P0[0]],
+                     [1, n[1], u[1], W / 2],
+                     [0, n[2], u[2], P0[1]]])
 
 
-def check_cable_fit(angle, stand):
-    """Assert the phone, a USB-C plug boot and its cable all clear the stand.
+def along_c(section, c0, c1):
+    """Extrude an (a, b) section along c in dock coordinates."""
+    return m3d.Manifold.extrude(section.simplify(1e-3), c1 - c0).translate([0, 0, c0])
 
-    The boot sticks straight out of the phone's bottom along the phone axis;
-    the cable carries on along that axis to the bay floor, then runs out of
-    the front of the bay on the floor. Every port height / sideways shift
-    combination must have zero overlap with the stand and keep the boot
-    above the floor.
+
+def dock_cuts():
+    """Pocket, strain-relief groove and cable pinch, in dock coordinates.
+
+    The groove is open towards the screen side, so the cable is pressed in
+    from the front; at the pinch it snaps past a throat into a bore slightly
+    smaller than the cable, which holds it.
+    """
+    bw, bt, _ = DOCK_BOOT
+    nc, f = DOCK_PORT_N, DOCK_FIT
+    pocket = rect(-bw / 2 - f, bw / 2 + f, nc - bt / 2 - f, nc + bt / 2 + f)
+    r = DOCK_RELIEF_W / 2
+    groove = m3d.CrossSection.circle(r, 40).translate([0, nc]) + rect(-r, r, nc, nc + 60)
+    rb, rt = (DOCK_CABLE_D - 0.2) / 2, (DOCK_CABLE_D - 0.6) / 2
+    top = DOCK_TOP_N
+    funnel = cs(oriented([(-rt, top - 1.6), (rt, top - 1.6), (rt + 2, top + 0.4), (-rt - 2, top + 0.4)]))
+    pinch = m3d.CrossSection.circle(rb, 40).translate([0, nc]) + rect(-rt, rt, nc, nc + 60) + funnel
+    c1, c2 = -DOCK_DEPTH, DOCK_PINCH_C
+    c3 = c2 - DOCK_PINCH_L
+    return (along_c(pocket, c1, 5) + along_c(groove, c2 - 0.01, c1 + 0.01)
+            + along_c(pinch, c3, c2) + along_c(groove, c3 - 80, c3 + 0.01))
+
+
+def check_dock(angle, stand):
+    """Assert the phone clears the stand and the plug sits in its pocket.
+
+    Checked: the boot fits the pocket and rests on its floor, the tip and the
+    cable run free, the pinch grips the cable, the pocket walls are at least
+    1.5 mm thick. Returns how far the tip sticks out above the ledge.
     """
     P = frame(angle)
-    a = math.radians(angle)
+    T = dock_frame(angle)
     phone = side_extrude(quad(P, 0.05, PHONE_L, 0.05, PHONE_T - 1),
                          W / 2 - PHONE_W / 2 - 1, W / 2 + PHONE_W / 2 - 1)
     assert (stand ^ phone).volume() < 0.01, f"{angle} deg: phone hits the stand"
-    bw, bt, bl = PLUG_BOOT
-    r = CABLE_D / 2
-    for n_c in PLUG_PORT_N:
-        boot_cs = quad(P, -bl, 0, n_c - bt / 2, n_c + bt / 2)
-        low = P(-bl, n_c - bt / 2)[1]
-        assert low > 0.5, f"{angle} deg: plug boot hits the bay floor ({low:.1f} mm)"
-        drop = (P(-bl, n_c)[1] - r) / math.sin(a)
-        cable_cs = quad(P, -bl - drop, -bl, n_c - r, n_c + r) + rect(
-            -5, P(-bl - drop, n_c)[0] + r, 0.01, CABLE_D)
-        for dy in PLUG_SHIFT:
-            yc = W / 2 + dy
-            boot = side_extrude(boot_cs, yc - bw / 2, yc + bw / 2)
-            cable = side_extrude(cable_cs, yc - r, yc + r)
-            hit = (stand ^ boot).volume() + (stand ^ cable).volume()
-            assert hit < 0.01, f"{angle} deg: plug/cable hits the stand (port {n_c}, shift {dy})"
-    # Clip bore stays open for a 5 mm cable, and the clip clears the plug.
-    xc, yc = clip_axis(P(-LEDGE_T, SLOT_T + LIP_T)[0])
-    bore = m3d.Manifold.cylinder(CLIP_H + 2, 2.5, circular_segments=48).translate([xc, yc, -1])
-    assert (stand ^ bore).volume() < 0.01, f"{angle} deg: cable clip bore is blocked"
-    assert yc - CLIP_ID / 2 - CLIP_WALL > W / 2 + bw / 2 + max(PLUG_SHIFT) + 2, "clip too close to the plug"
-    return min(P(-bl, n - bt / 2)[1] for n in PLUG_PORT_N)
+
+    def part(a, b, c0, c1):
+        sec = rect(-a / 2, a / 2, DOCK_PORT_N - b / 2, DOCK_PORT_N + b / 2)
+        return along_c(sec, c0, c1).transform(T)
+
+    def rod(d, c0, c1):
+        sec = m3d.CrossSection.circle(d / 2, 40).translate([0, DOCK_PORT_N])
+        return along_c(sec, c0, c1).transform(T)
+
+    bw, bt, bl = DOCK_BOOT
+    c_boot = DOCK_RISE - bl
+    clear = {
+        "plug boot": part(bw, bt, c_boot, DOCK_RISE),
+        "plug tip": part(7.7, 1.5, DOCK_RISE, DOCK_RISE + DOCK_TIP_L),
+        "strain relief": rod(DOCK_RELIEF_W - 0.4, DOCK_PINCH_C, c_boot),
+        "cable": rod(DOCK_CABLE_D - 0.3, -100, c_boot),
+    }
+    for name, body in clear.items():
+        assert (stand ^ body).volume() < 0.01, f"{angle} deg: {name} hits the stand"
+    seat = part(bw, bt, c_boot - 0.5, c_boot)
+    assert (stand ^ seat).volume() > 0.25 * seat.volume(), f"{angle} deg: boot has nothing to rest on"
+    grip = rod(DOCK_CABLE_D, DOCK_PINCH_C - DOCK_PINCH_L, DOCK_PINCH_C)
+    assert (stand ^ grip).volume() > 0.01, f"{angle} deg: pinch does not grip the cable"
+    w = 1.5
+    shell = (part(bw + 2 * (DOCK_FIT + w), bt + 2 * (DOCK_FIT + w), c_boot + 0.05, -0.01)
+             - part(bw + 2 * DOCK_FIT, bt + 2 * DOCK_FIT, c_boot - 1, 1))
+    assert (shell - stand).volume() < 0.01, f"{angle} deg: pocket wall thinner than {w} mm"
+    return DOCK_RISE + DOCK_TIP_L
+
+
+def build_dock_test():
+    """The pocket, groove and pinch in a small upright block, to try the plug."""
+    bt = DOCK_BOOT[1]
+    b0 = DOCK_PORT_N - bt / 2 - DOCK_FIT - DOCK_WALL
+    block = along_c(rect(-DOCK_BLOCK_W / 2, DOCK_BLOCK_W / 2, b0, DOCK_TOP_N), -DOCK_L, 0)
+    return (block - dock_cuts()).translate([0, 0, DOCK_L])
 
 
 def build_test_plate():
@@ -253,20 +299,21 @@ def render_preview(angle, tm, path):
         P, -LEDGE_T, LIP_H, SLOT_T, SLOT_T + LIP_T) + rect(P(-LEDGE_T, SLOT_T + LIP_T)[0], D, 0, BASE_T)
     for ring in side.to_polygons():
         ax.fill(*np.vstack([ring, ring[:1]]).T, color="#4a6fa5")
-    # The centre strip is cut away for the plug and cable.
-    slot = (quad(P, -CABLE_LEN, 2, *CABLE_N) + rect(-1, P(-LEDGE_T, SLOT_T + LIP_T)[0] + 1, -1, TUNNEL_H)) ^ side
-    for i, ring in enumerate(slot.to_polygons()):
-        ax.fill(*np.vstack([ring, ring[:1]]).T, facecolor="#dfe7f2", edgecolor="#4a6fa5", hatch="//",
-                lw=0.8, label=f"cable slot ({CABLE_W:.0f} mm wide, centre)" if i == 0 else None)
+    # The centre strip carries the dock block, cut by the pocket and cable groove.
+    dock = dock_block(P) - quad(P, -DOCK_L - 40, -DOCK_DEPTH, DOCK_PORT_N - DOCK_RELIEF_W / 2, 60)
+    for i, ring in enumerate(dock.to_polygons()):
+        ax.fill(*np.vstack([ring, ring[:1]]).T, color="#2f4f7f",
+                label=f"dock block ({DOCK_BLOCK_W:.0f} mm wide, centre)" if i == 0 else None)
     ph = phone_outline(P)
     ax.fill(ph[:, 0], ph[:, 1], color="#cccccc", alpha=0.7, label="phone with case")
-    bw, bt, bl = PLUG_BOOT
-    n_c = PLUG_PORT_N[1]
-    boot = np.array([P(0, n_c - bt / 2), P(-bl, n_c - bt / 2), P(-bl, n_c + bt / 2),
-                     P(0, n_c + bt / 2), P(0, n_c - bt / 2)])
-    ax.fill(boot[:, 0], boot[:, 1], color="#e07b39", label=f"USB-C plug ({bl:.0f} mm boot)")
-    drop = (P(-bl, n_c)[1] - CABLE_D / 2) / math.sin(math.radians(angle))
-    cable = np.array([P(-bl, n_c), P(-bl - drop, n_c), (-12, CABLE_D / 2)])
+    bw, bt, bl = DOCK_BOOT
+    n_c = DOCK_PORT_N
+    for (s0, s1, t), lab in [((DOCK_RISE - bl, DOCK_RISE, bt), "Lightning plug, fixed"),
+                             ((DOCK_RISE, DOCK_RISE + DOCK_TIP_L, 1.5), None)]:
+        ring = np.array([P(s0, n_c - t / 2), P(s1, n_c - t / 2), P(s1, n_c + t / 2), P(s0, n_c + t / 2)])
+        ax.fill(ring[:, 0], ring[:, 1], color="#e07b39", label=lab)
+    out = P(-DOCK_L - 4, n_c)
+    cable = np.array([P(DOCK_RISE - bl, n_c), out, (out[0] - 8, 1.5), (-12, 1.5)])
     ax.plot(cable[:, 0], cable[:, 1], color="#e07b39", lw=3, alpha=0.6)
     ax.axhline(FRAME_CLEARANCE, color="#999999", ls="--", lw=1)
     ax.text(2, FRAME_CLEARANCE + 2, f"vent frame underside ({FRAME_CLEARANCE:.0f} mm)", color="#666666")
@@ -316,24 +363,25 @@ def main():
     out_dir = HERE / "stl"
     out_dir.mkdir(exist_ok=True)
 
-    tm = to_trimesh(build_test_plate(), "fit test")
-    path = out_dir / "fit_test_plate.stl"
-    tm.export(path)
-    report(path, tm)
+    for solid, name in [(build_test_plate(), "fit_test_plate"), (build_dock_test(), "dock_plug_fit_test")]:
+        tm = to_trimesh(solid, name)
+        path = out_dir / f"{name}.stl"
+        tm.export(path)
+        report(path, tm)
 
     for angle in VARIANTS:
         if wanted and angle not in wanted:
             continue
         stand = build_stand(angle)
-        floor_gap = check_cable_fit(angle, stand)
+        tip = check_dock(angle, stand)
         tm = to_trimesh(stand, f"stand {angle}")
         assert tm.bounds[1][2] < FRAME_CLEARANCE, f"{angle} deg: stand hits the vent frame"
         path = out_dir / f"seal_u_phone_stand_{angle}deg.stl"
         tm.export(path)
         render_preview(angle, tm, out_dir / f"seal_u_phone_stand_{angle}deg_preview.png")
         report(path, tm)
-        print(f"   cable check OK: {PLUG_BOOT[2]:.0f} mm plug boot, "
-              f"{floor_gap:.1f} mm above the bay floor at worst")
+        print(f"   dock check OK: tip {tip:.1f} mm above the ledge, ~{tip - DOCK_CASE_BOTTOM:.1f} mm "
+              f"into the phone with a {DOCK_CASE_BOTTOM} mm case bottom")
 
 
 if __name__ == "__main__":
