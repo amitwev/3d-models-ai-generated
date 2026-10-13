@@ -7,8 +7,8 @@ no vent clip. The phone stands in portrait, bottom edge towards the gear
 selector, leaning back at `angle` degrees from the bay floor, screen facing
 the driver. A Lightning plug stands fixed in a pocket in the bottom ledge, tip
 up along the phone axis, so the phone plugs itself in as it is lowered into
-the stand (a dock); the cable is clamped in a groove and leaves through the
-front of the stand.
+the stand (a dock). Plug and cable lie in one channel open to the front, so
+nothing is threaded through a hole; teeth in the channel grip the cable.
 
 Coordinates: x = depth into the bay (0 = front edge, towards the gear
 selector), y = across the bay, z = up from the bay floor.
@@ -64,34 +64,43 @@ LIP_H = 16.0           # lip height along the phone (holds the phone, whose
                        # centre of gravity sits past the short back plate)
 LIP_W = 14.0           # lips only at the two corners, screen stays clear
 RIB_T = 3.0
-P0 = (35.0, 21.0)      # back-bottom corner of the phone (x, z): high enough
-                       # that a 28 mm plug boot clears the bay floor at 45 deg
+P0 = (35.0, 21.0)      # back-bottom corner of the phone (x, z): leaves room
+                       # under the ledge for the plug and cable channel
 
 # --- Lightning dock (iPhone 14 Pro with case) -------------------------------
-# The plug boot sits in a pocket in the ledge with its tip pointing up the
-# phone axis. The phone leans on the back plate under its own weight, so the
-# plug only has to sit at the port's distance from the case back; sideways
-# the plug itself centres the phone (the guides leave +-1 mm). Lifting the
-# phone off leaves the plug in place: the cable is snapped into a pinch below
-# the pocket that keeps the boot from being pulled out.
+# One open channel runs from the ledge down the front of the stand: nothing
+# has to be threaded, the cable is simply pressed in from the screen side.
+# The plug boot lies in the upper, wider part with its tip pointing up the
+# phone axis and stops on the shoulder where the channel narrows. The open
+# side faces up, so the boot lies on the channel floor under its own weight,
+# and the phone leans on the back plate the same way: the floor only has to
+# sit at the port's distance from the case back. Sideways the boot floats in
+# the channel and lines up with the port as the phone is lowered. Below the
+# shoulder, teeth from alternate walls make the cable snake, which holds the
+# plug in place when the phone is lifted off.
 DOCK_PORT_N = 5.5      # port centre above the case back: 3.9 (half of the
                        # 7.85 mm phone) + ~1.6 case back - measure your case
 DOCK_BOOT = (8.0, 5.3, 12.0)   # plug boot width, thickness, rigid length
-                               # (Apple cable; measure third-party ones)
+                               # (Apple cable; the thickness sets the floor)
 DOCK_TIP_L = 6.7       # metal tip length
 DOCK_RISE = 0.5        # boot top above the ledge: reaches into the case's
                        # port opening so the tip goes in deeper
-DOCK_FIT = 0.15        # pocket clearance per side: snug push fit
-DOCK_RELIEF_W = 4.6    # groove for the boot's strain relief
-DOCK_RELIEF_L = 9.0
-DOCK_CABLE_D = 3.0     # cable diameter at the pinch
-DOCK_PINCH_L = 6.0
+DOCK_SLOT_W = 10.5     # boot channel: boots up to 10 mm wide
+DOCK_RELIEF_W = 5.0    # straight run under the shoulder, for the boot's
+DOCK_RELIEF_L = 8.0    # stiff strain relief (narrow, so the boot has a seat)
+DOCK_CABLE_W = 7.0     # cable channel at the teeth and below
+DOCK_TOOTH = (2.5, 3.0)   # cleat teeth: reach into the channel, length
+DOCK_TEETH = 3         # alternating sides, one every DOCK_TOOTH_PITCH
+DOCK_TOOTH_PITCH = 4.5
+DOCK_CABLES = (3.0, 4.5)   # cable diameters the cleat is checked for
 DOCK_WALL = 2.5
-DOCK_BLOCK_W = 16.0    # dock block width across the stand
+DOCK_BLOCK_W = DOCK_SLOT_W + 2 * DOCK_WALL   # dock block width across the stand
 DOCK_DEPTH = DOCK_BOOT[2] - DOCK_RISE
-DOCK_PINCH_C = -DOCK_DEPTH - DOCK_RELIEF_L   # pinch: c from here down by DOCK_PINCH_L
-DOCK_L = DOCK_DEPTH + DOCK_RELIEF_L + DOCK_PINCH_L + DOCK_WALL
-DOCK_TOP_N = DOCK_PORT_N + DOCK_BOOT[1] / 2 + DOCK_FIT + DOCK_WALL
+DOCK_FLOOR_N = DOCK_PORT_N - DOCK_BOOT[1] / 2   # channel floor, case-back side
+DOCK_CLEAT_C = -DOCK_DEPTH - DOCK_RELIEF_L     # teeth start here, going down
+DOCK_CLEAT_L = (DOCK_TEETH - 1) * DOCK_TOOTH_PITCH + DOCK_TOOTH[1]
+DOCK_L = DOCK_DEPTH + DOCK_RELIEF_L + DOCK_CLEAT_L + 1.5
+DOCK_TOP_N = DOCK_PORT_N + DOCK_BOOT[1] / 2 + 1.0   # side walls reach past the boot
 DOCK_CASE_BOTTOM = 1.5  # typical case thickness under the phone (for the report)
 
 TEST_T = 2.0           # fit-test plate thickness
@@ -199,34 +208,42 @@ def along_c(section, c0, c1):
     return m3d.Manifold.extrude(section.simplify(1e-3), c1 - c0).translate([0, 0, c0])
 
 
-def dock_cuts():
-    """Pocket, strain-relief groove and cable pinch, in dock coordinates.
+def dock_teeth():
+    """Cleat teeth on alternate channel walls, in dock coordinates."""
+    reach, length = DOCK_TOOTH
+    w = DOCK_CABLE_W / 2
+    teeth = []
+    for i in range(DOCK_TEETH):
+        side = 1 if i % 2 == 0 else -1
+        a0, a1 = sorted([side * (w - reach), side * (w + 1)])
+        c1 = DOCK_CLEAT_C - i * DOCK_TOOTH_PITCH
+        teeth.append(along_c(rect(a0, a1, DOCK_FLOOR_N - 5, DOCK_TOP_N + 5), c1 - length, c1))
+    return m3d.Manifold.batch_boolean(teeth, m3d.OpType.Add)
 
-    The groove is open towards the screen side, so the cable is pressed in
-    from the front; at the pinch it snaps past a throat into a bore slightly
-    smaller than the cable, which holds it.
+
+def dock_cuts():
+    """The open channel for the plug and cable, in dock coordinates.
+
+    Every section is open towards the screen side (+b) up to and past the top
+    of the block, so the plug and cable are laid in from the front.
     """
-    bw, bt, _ = DOCK_BOOT
-    nc, f = DOCK_PORT_N, DOCK_FIT
-    pocket = rect(-bw / 2 - f, bw / 2 + f, nc - bt / 2 - f, nc + bt / 2 + f)
-    r = DOCK_RELIEF_W / 2
-    groove = m3d.CrossSection.circle(r, 40).translate([0, nc]) + rect(-r, r, nc, nc + 60)
-    rb, rt = (DOCK_CABLE_D - 0.2) / 2, (DOCK_CABLE_D - 0.6) / 2
-    top = DOCK_TOP_N
-    funnel = cs(oriented([(-rt, top - 1.6), (rt, top - 1.6), (rt + 2, top + 0.4), (-rt - 2, top + 0.4)]))
-    pinch = m3d.CrossSection.circle(rb, 40).translate([0, nc]) + rect(-rt, rt, nc, nc + 60) + funnel
-    c1, c2 = -DOCK_DEPTH, DOCK_PINCH_C
-    c3 = c2 - DOCK_PINCH_L
-    return (along_c(pocket, c1, 5) + along_c(groove, c2 - 0.01, c1 + 0.01)
-            + along_c(pinch, c3, c2) + along_c(groove, c3 - 80, c3 + 0.01))
+    s, r, w = DOCK_SLOT_W / 2, DOCK_RELIEF_W / 2, DOCK_CABLE_W / 2
+    boot = rect(-s, s, DOCK_FLOOR_N, 60)
+    relief = rect(-r, r, DOCK_FLOOR_N, 60)
+    cable = rect(-w, w, DOCK_FLOOR_N, 60)
+    c1 = -DOCK_DEPTH
+    return (along_c(boot, c1, 5) + along_c(relief, DOCK_CLEAT_C - 0.01, c1 + 0.01)
+            + (along_c(cable, -100, DOCK_CLEAT_C) - dock_teeth()))
 
 
 def check_dock(angle, stand):
-    """Assert the phone clears the stand and the plug sits in its pocket.
+    """Assert the phone clears the stand and the plug sits in its channel.
 
-    Checked: the boot fits the pocket and rests on its floor, the tip and the
-    cable run free, the pinch grips the cable, the pocket walls are at least
-    1.5 mm thick. Returns how far the tip sticks out above the ledge.
+    Checked: the boot fits at either side of the channel and rests on the
+    shoulder, the tip and strain relief run free, the channel is open towards
+    the front over its whole length, the teeth make 3-4.5 mm cables snake past
+    them and leave each one room to pass, the side walls are at least 1.5 mm.
+    Returns how far the tip sticks out above the ledge.
     """
     P = frame(angle)
     T = dock_frame(angle)
@@ -234,39 +251,42 @@ def check_dock(angle, stand):
                          W / 2 - PHONE_W / 2 - 1, W / 2 + PHONE_W / 2 - 1)
     assert (stand ^ phone).volume() < 0.01, f"{angle} deg: phone hits the stand"
 
-    def part(a, b, c0, c1):
-        sec = rect(-a / 2, a / 2, DOCK_PORT_N - b / 2, DOCK_PORT_N + b / 2)
-        return along_c(sec, c0, c1).transform(T)
+    def box(a0, a1, b0, b1, c0, c1):
+        return along_c(rect(a0, a1, b0, b1), c0, c1).transform(T)
 
-    def rod(d, c0, c1):
-        sec = m3d.CrossSection.circle(d / 2, 40).translate([0, DOCK_PORT_N])
-        return along_c(sec, c0, c1).transform(T)
+    def hits(body):
+        return (stand ^ body).volume()
 
     bw, bt, bl = DOCK_BOOT
     c_boot = DOCK_RISE - bl
-    clear = {
-        "plug boot": part(bw, bt, c_boot, DOCK_RISE),
-        "plug tip": part(7.7, 1.5, DOCK_RISE, DOCK_RISE + DOCK_TIP_L),
-        "strain relief": rod(DOCK_RELIEF_W - 0.4, DOCK_PINCH_C, c_boot),
-        "cable": rod(DOCK_CABLE_D - 0.3, -100, c_boot),
-    }
-    for name, body in clear.items():
-        assert (stand ^ body).volume() < 0.01, f"{angle} deg: {name} hits the stand"
-    seat = part(bw, bt, c_boot - 0.5, c_boot)
-    assert (stand ^ seat).volume() > 0.25 * seat.volume(), f"{angle} deg: boot has nothing to rest on"
-    grip = rod(DOCK_CABLE_D, DOCK_PINCH_C - DOCK_PINCH_L, DOCK_PINCH_C)
-    assert (stand ^ grip).volume() > 0.01, f"{angle} deg: pinch does not grip the cable"
-    w = 1.5
-    shell = (part(bw + 2 * (DOCK_FIT + w), bt + 2 * (DOCK_FIT + w), c_boot + 0.05, -0.01)
-             - part(bw + 2 * DOCK_FIT, bt + 2 * DOCK_FIT, c_boot - 1, 1))
-    assert (shell - stand).volume() < 0.01, f"{angle} deg: pocket wall thinner than {w} mm"
+    nf, nc = DOCK_FLOOR_N, DOCK_PORT_N
+    float_a = DOCK_SLOT_W / 2 - bw / 2 - 0.05
+    for da in (-float_a, 0, float_a):
+        boot = box(da - bw / 2, da + bw / 2, nf + 0.05, nf + bt, c_boot, DOCK_RISE)
+        assert hits(boot) < 0.01, f"{angle} deg: plug boot hits the stand"
+        seat = box(da - bw / 2, da + bw / 2, nf + 0.05, nf + bt, c_boot - 0.5, c_boot)
+        assert hits(seat) > 0.2 * seat.volume(), f"{angle} deg: boot has nothing to rest on"
+    tip = box(-3.85, 3.85, nc - 0.75, nc + 0.75, DOCK_RISE, DOCK_RISE + DOCK_TIP_L)
+    assert hits(tip) < 0.01, f"{angle} deg: plug tip hits the stand"
+    r = DOCK_RELIEF_W / 2
+    relief = box(-r + 0.05, r - 0.05, nf + 0.05, 60, DOCK_CLEAT_C, c_boot)
+    assert hits(relief) < 0.01, f"{angle} deg: strain relief run is blocked"
+    # Open to the front: a sheet down the middle of the channel meets nothing.
+    gap = DOCK_CABLE_W - 2 * DOCK_TOOTH[0]
+    sheet = box(-gap / 2 + 0.05, gap / 2 - 0.05, nf + 0.05, 60, -100, 5)
+    assert hits(sheet) < 0.01, f"{angle} deg: the cable channel is not open to the front"
+    for d in DOCK_CABLES:
+        assert d <= min(DOCK_CABLE_W - DOCK_TOOTH[0], DOCK_RELIEF_W), f"{d} mm cable does not fit"
+        assert d > gap, f"{d} mm cable runs straight past the teeth"
+    side = box(DOCK_SLOT_W / 2, DOCK_SLOT_W / 2 + 1.5, nf, DOCK_TOP_N - 0.05, c_boot, -0.05)
+    for s in (side, side.mirror([0, 1, 0]).translate([0, W, 0])):
+        assert (s - stand).volume() < 0.01, f"{angle} deg: channel wall thinner than 1.5 mm"
     return DOCK_RISE + DOCK_TIP_L
 
 
 def build_dock_test():
-    """The pocket, groove and pinch in a small upright block, to try the plug."""
-    bt = DOCK_BOOT[1]
-    b0 = DOCK_PORT_N - bt / 2 - DOCK_FIT - DOCK_WALL
+    """The channel, shoulder and cleat in a small upright block, to try the plug."""
+    b0 = DOCK_FLOOR_N - DOCK_WALL
     block = along_c(rect(-DOCK_BLOCK_W / 2, DOCK_BLOCK_W / 2, b0, DOCK_TOP_N), -DOCK_L, 0)
     return (block - dock_cuts()).translate([0, 0, DOCK_L])
 
@@ -300,7 +320,7 @@ def render_preview(angle, tm, path):
     for ring in side.to_polygons():
         ax.fill(*np.vstack([ring, ring[:1]]).T, color="#4a6fa5")
     # The centre strip carries the dock block, cut by the pocket and cable groove.
-    dock = dock_block(P) - quad(P, -DOCK_L - 40, -DOCK_DEPTH, DOCK_PORT_N - DOCK_RELIEF_W / 2, 60)
+    dock = dock_block(P) - quad(P, -DOCK_L - 40, -DOCK_DEPTH, DOCK_FLOOR_N, 60)
     for i, ring in enumerate(dock.to_polygons()):
         ax.fill(*np.vstack([ring, ring[:1]]).T, color="#2f4f7f",
                 label=f"dock block ({DOCK_BLOCK_W:.0f} mm wide, centre)" if i == 0 else None)
