@@ -22,6 +22,7 @@ Requires: pip install manifold3d trimesh numpy matplotlib
 
 import math
 import sys
+import zipfile
 from pathlib import Path
 
 import manifold3d as m3d
@@ -397,6 +398,40 @@ def render_preview(angle, tm, path):
     plt.close(fig)
 
 
+def export_3mf(tm, path):
+    """Write a minimal 3MF (indexed mesh, millimetres).
+
+    Unlike STL, 3MF keeps the mesh's vertex indices, so the slicer gets the
+    closed volume as built instead of re-merging loose triangles by position.
+    """
+    verts = "".join(f'<vertex x="{x:.5f}" y="{y:.5f}" z="{z:.5f}"/>' for x, y, z in tm.vertices)
+    tris = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in tm.faces)
+    model = ('<?xml version="1.0" encoding="UTF-8"?>'
+             '<model unit="millimeter" xml:lang="en-US" '
+             'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
+             f'<resources><object id="1" type="model"><mesh><vertices>{verts}</vertices>'
+             f'<triangles>{tris}</triangles></mesh></object></resources>'
+             '<build><item objectid="1"/></build></model>')
+    types = ('<?xml version="1.0" encoding="UTF-8"?>'
+             '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+             '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+             '<Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>'
+             '</Types>')
+    rels = ('<?xml version="1.0" encoding="UTF-8"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Target="/3D/3dmodel.model" Id="rel0" '
+            'Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>')
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("[Content_Types].xml", types)
+        z.writestr("_rels/.rels", rels)
+        z.writestr("3D/3dmodel.model", model)
+
+
+def export(tm, path):
+    tm.export(path)
+    export_3mf(tm, path.with_suffix(".3mf"))
+
+
 def report(path, tm):
     ext = tm.extents
     print(f"{path.relative_to(HERE)}: {ext[0]:.1f} x {ext[1]:.1f} x {ext[2]:.1f} mm, "
@@ -411,7 +446,7 @@ def main():
     for solid, name in [(build_test_plate(), "fit_test_plate"), (build_dock_test(), "dock_plug_fit_test")]:
         tm = to_trimesh(solid, name)
         path = out_dir / f"{name}.stl"
-        tm.export(path)
+        export(tm, path)
         report(path, tm)
 
     for angle in VARIANTS:
@@ -422,7 +457,7 @@ def main():
         tm = to_trimesh(stand, f"stand {angle}")
         assert tm.bounds[1][2] < FRAME_CLEARANCE, f"{angle} deg: stand hits the vent frame"
         path = out_dir / f"seal_u_phone_stand_{angle}deg.stl"
-        tm.export(path)
+        export(tm, path)
         render_preview(angle, tm, out_dir / f"seal_u_phone_stand_{angle}deg_preview.png")
         report(path, tm)
         print(f"   dock check OK: tip {tip:.1f} mm above the ledge, ~{tip - DOCK_CASE_BOTTOM:.1f} mm "

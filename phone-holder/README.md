@@ -20,6 +20,11 @@ centre console. Held by the bay's rubber tabs only: no adhesive, no vent clip.
 | [seal_u_phone_stand_40deg.stl](stl/seal_u_phone_stand_40deg.stl) | 40° | 63 מ"מ | ~119 מ"מ | **ברירת מחדל** |
 | [seal_u_phone_stand_45deg.stl](stl/seal_u_phone_stand_45deg.stl) | 45° | 67 מ"מ | ~128 מ"מ | הכי זקוף |
 
+לכל קובץ STL יש גם **קובץ 3MF** באותו שם (למשל
+[seal_u_phone_stand_45deg.3mf](stl/seal_u_phone_stand_45deg.3mf)). ב-Bambu Studio עדיף
+לייבא את ה-3MF: הוא שומר את הרשת סגורה בדיוק כמו שנבנתה, בלי שהסלייסר יצטרך
+לחבר מחדש משולשים.
+
 תצוגות: [35°](stl/seal_u_phone_stand_35deg_preview.png) ·
 [40°](stl/seal_u_phone_stand_40deg_preview.png) ·
 [45°](stl/seal_u_phone_stand_45deg_preview.png)
