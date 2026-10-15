@@ -42,23 +42,26 @@ FRAME_CLEARANCE = 70.0  # bay floor to the underside of the vent frame
 
 # --- Phone (iPhone 14 Pro with case; the cradle also takes a Galaxy S24/S25) -
 PHONE_T = 12.0         # max thickness with case (owner measured 11)
-PHONE_W = 76.0         # max width with case
+PHONE_W = 82.0         # max width with case (Samsung with case, measured)
 PHONE_L = 152.0        # max length with case
 
 # --- Stand ------------------------------------------------------------------
 FIT = 0.25             # clearance per side against the rubber tabs
-W = BAY_W - 2 * FIT    # 84.5
+WIDEN = 5.0            # owner asked for a wider stand: the base no longer
+                       # drops between the rubber tabs (85 mm), it sits wider
+W = BAY_W - 2 * FIT + WIDEN  # 89.5
 D = BAY_D - 1.0        # 169
 CORNER_R = 4.0         # plan-view corner radius of the base
 BASE_T = 3.0           # base plate thickness
 PLATE_T = 4.0          # back plate under the phone
-WALL_T = (W - 78.0) / 2  # side walls -> 78 mm between the phone guides
+WALL_T = 2.5           # side walls -> 84.5 mm between the phone guides
 GUIDE_H = 4.0          # side guides above the back plate
 GUIDE_L = 60.0         # guide length from the ledge (stays clear of buttons)
 SUPPORT_L = GUIDE_L + 5  # back plate ends 5 mm past the side guides, so the
                          # stand stays under the vent frame
 LEDGE_T = 4.0
-SLOT_T = PHONE_T + 0.5  # gap between back plate and front lip
+SLOT_T = PHONE_T + 0.5 + 10.0  # gap between back plate and front lip: 10 mm
+                               # more than the thickest phone, so it drops in
 LIP_T = 4.5
 LIP_H = 16.0           # lip height along the phone (holds the phone, whose
                        # centre of gravity sits past the short back plate)
@@ -76,8 +79,8 @@ P0 = (35.0, 21.0)      # back-bottom corner of the phone (x, z): leaves room
 # and the phone leans on the back plate the same way: the floor only has to
 # sit at the port's distance from the case back. Sideways the boot floats in
 # the channel and lines up with the port as the phone is lowered. Below the
-# shoulder, teeth from alternate walls make the cable snake, which holds the
-# plug in place when the phone is lifted off.
+# shoulder the cable is pressed into a tapered, ribbed slot that wedges any
+# 3-5 mm cable, which holds the plug in place when the phone is lifted off.
 DOCK_PORT_N = 5.5      # port centre above the case back: 3.9 (half of the
                        # 7.85 mm phone) + ~1.6 case back - measure your case
 DOCK_BOOT = (8.0, 5.3, 12.0)   # plug boot width, thickness, rigid length
@@ -88,17 +91,22 @@ DOCK_RISE = 0.5        # boot top above the ledge: reaches into the case's
 DOCK_SLOT_W = 10.5     # boot channel: boots up to 10 mm wide
 DOCK_RELIEF_W = 5.0    # straight run under the shoulder, for the boot's
 DOCK_RELIEF_L = 8.0    # stiff strain relief (narrow, so the boot has a seat)
-DOCK_CABLE_W = 7.0     # cable channel at the teeth and below
-DOCK_TOOTH = (2.5, 3.0)   # cleat teeth: reach into the channel, length
-DOCK_TEETH = 3         # alternating sides, one every DOCK_TOOTH_PITCH
-DOCK_TOOTH_PITCH = 4.5
-DOCK_CABLES = (3.0, 4.5)   # cable diameters the cleat is checked for
+DOCK_CABLE_W = 7.0     # cable channel below the cleat
+# Cleat: a V slot open to the front, 1.6 mm wide at the bottom and widening by
+# 0.5 mm per mm (a taper shallow enough to lock the cable by friction), with
+# ribs that narrow it by 0.6 mm every other 1.5 mm to grip along the cable.
+DOCK_V = (1.6, 0.5)    # bottom width, widening per mm
+DOCK_V_BOTTOM = -1.0   # V bottom below the channel floor
+DOCK_RIB = (0.6, 1.5)  # rib narrowing, segment length
+DOCK_RIBS = 7          # segments (ribbed and plain alternate)
+DOCK_SQUEEZE = 0.4     # how much a cable is squeezed where it wedges
+DOCK_CABLES = (3.0, 5.0)   # cable diameters the cleat is checked for
 DOCK_WALL = 2.5
 DOCK_BLOCK_W = DOCK_SLOT_W + 2 * DOCK_WALL   # dock block width across the stand
 DOCK_DEPTH = DOCK_BOOT[2] - DOCK_RISE
 DOCK_FLOOR_N = DOCK_PORT_N - DOCK_BOOT[1] / 2   # channel floor, case-back side
-DOCK_CLEAT_C = -DOCK_DEPTH - DOCK_RELIEF_L     # teeth start here, going down
-DOCK_CLEAT_L = (DOCK_TEETH - 1) * DOCK_TOOTH_PITCH + DOCK_TOOTH[1]
+DOCK_CLEAT_C = -DOCK_DEPTH - DOCK_RELIEF_L     # cleat starts here, going down
+DOCK_CLEAT_L = DOCK_RIBS * DOCK_RIB[1]
 DOCK_L = DOCK_DEPTH + DOCK_RELIEF_L + DOCK_CLEAT_L + 1.5
 DOCK_TOP_N = DOCK_PORT_N + DOCK_BOOT[1] / 2 + 1.0   # side walls reach past the boot
 DOCK_CASE_BOTTOM = 1.5  # typical case thickness under the phone (for the report)
@@ -208,17 +216,29 @@ def along_c(section, c0, c1):
     return m3d.Manifold.extrude(section.simplify(1e-3), c1 - c0).translate([0, 0, c0])
 
 
-def dock_teeth():
-    """Cleat teeth on alternate channel walls, in dock coordinates."""
-    reach, length = DOCK_TOOTH
-    w = DOCK_CABLE_W / 2
-    teeth = []
-    for i in range(DOCK_TEETH):
-        side = 1 if i % 2 == 0 else -1
-        a0, a1 = sorted([side * (w - reach), side * (w + 1)])
-        c1 = DOCK_CLEAT_C - i * DOCK_TOOTH_PITCH
-        teeth.append(along_c(rect(a0, a1, DOCK_FLOOR_N - 5, DOCK_TOP_N + 5), c1 - length, c1))
-    return m3d.Manifold.batch_boolean(teeth, m3d.OpType.Add)
+def cleat_v(narrow=0.0):
+    """Cross-section of the cleat's V slot, in dock coordinates."""
+    w0, k = DOCK_V
+    b0 = DOCK_FLOOR_N + DOCK_V_BOTTOM
+    b1 = DOCK_TOP_N + 5
+    w1 = w0 + k * (b1 - b0)
+    return cs(oriented([(-(w0 - narrow) / 2, b0), ((w0 - narrow) / 2, b0),
+                        ((w1 - narrow) / 2, b1), (-(w1 - narrow) / 2, b1)]))
+
+
+def cleat_seat(d):
+    """Height (b) of the axis of a d mm cable wedged in the V."""
+    w0, k = DOCK_V
+    return DOCK_FLOOR_N + DOCK_V_BOTTOM + (d - DOCK_SQUEEZE - w0) / k
+
+
+def cleat():
+    segs = []
+    for i in range(DOCK_RIBS):
+        c1 = DOCK_CLEAT_C - i * DOCK_RIB[1]
+        narrow = DOCK_RIB[0] if i % 2 else 0.0
+        segs.append(along_c(cleat_v(narrow), c1 - DOCK_RIB[1] - 0.01, c1 + 0.01))
+    return m3d.Manifold.batch_boolean(segs, m3d.OpType.Add)
 
 
 def dock_cuts():
@@ -232,8 +252,9 @@ def dock_cuts():
     relief = rect(-r, r, DOCK_FLOOR_N, 60)
     cable = rect(-w, w, DOCK_FLOOR_N, 60)
     c1 = -DOCK_DEPTH
+    c2 = DOCK_CLEAT_C - DOCK_CLEAT_L
     return (along_c(boot, c1, 5) + along_c(relief, DOCK_CLEAT_C - 0.01, c1 + 0.01)
-            + (along_c(cable, -100, DOCK_CLEAT_C) - dock_teeth()))
+            + cleat() + along_c(cable, -100, c2 + 0.01))
 
 
 def check_dock(angle, stand):
@@ -241,8 +262,8 @@ def check_dock(angle, stand):
 
     Checked: the boot fits at either side of the channel and rests on the
     shoulder, the tip and strain relief run free, the channel is open towards
-    the front over its whole length, the teeth make 3-4.5 mm cables snake past
-    them and leave each one room to pass, the side walls are at least 1.5 mm.
+    the front over its whole length, 3-5 mm cables wedge in the cleat below the
+    top of the block, the side walls are at least 1.5 mm.
     Returns how far the tip sticks out above the ledge.
     """
     P = frame(angle)
@@ -272,12 +293,16 @@ def check_dock(angle, stand):
     relief = box(-r + 0.05, r - 0.05, nf + 0.05, 60, DOCK_CLEAT_C, c_boot)
     assert hits(relief) < 0.01, f"{angle} deg: strain relief run is blocked"
     # Open to the front: a sheet down the middle of the channel meets nothing.
-    gap = DOCK_CABLE_W - 2 * DOCK_TOOTH[0]
+    gap = DOCK_V[0] - DOCK_RIB[0]
     sheet = box(-gap / 2 + 0.05, gap / 2 - 0.05, nf + 0.05, 60, -100, 5)
     assert hits(sheet) < 0.01, f"{angle} deg: the cable channel is not open to the front"
+    c_cleat = (DOCK_CLEAT_C - DOCK_CLEAT_L, DOCK_CLEAT_C)
     for d in DOCK_CABLES:
-        assert d <= min(DOCK_CABLE_W - DOCK_TOOTH[0], DOCK_RELIEF_W), f"{d} mm cable does not fit"
-        assert d > gap, f"{d} mm cable runs straight past the teeth"
+        assert d <= DOCK_RELIEF_W, f"{d} mm cable does not fit the strain-relief run"
+        b = cleat_seat(d)
+        assert b <= DOCK_TOP_N - 0.5, f"{d} mm cable does not sink into the cleat"
+        held = along_c(m3d.CrossSection.circle(d / 2, 40).translate([0, b]), *c_cleat).transform(T)
+        assert hits(held) > 0.05, f"{angle} deg: cleat does not grip a {d} mm cable"
     side = box(DOCK_SLOT_W / 2, DOCK_SLOT_W / 2 + 1.5, nf, DOCK_TOP_N - 0.05, c_boot, -0.05)
     for s in (side, side.mirror([0, 1, 0]).translate([0, W, 0])):
         assert (s - stand).volume() < 0.01, f"{angle} deg: channel wall thinner than 1.5 mm"
@@ -285,7 +310,7 @@ def check_dock(angle, stand):
 
 
 def build_dock_test():
-    """The channel, shoulder and cleat in a small upright block, to try the plug."""
+    """The channel, shoulder and cleat in a small upright block, to try the plug and cable."""
     b0 = DOCK_FLOOR_N - DOCK_WALL
     block = along_c(rect(-DOCK_BLOCK_W / 2, DOCK_BLOCK_W / 2, b0, DOCK_TOP_N), -DOCK_L, 0)
     return (block - dock_cuts()).translate([0, 0, DOCK_L])
@@ -332,8 +357,8 @@ def render_preview(angle, tm, path):
                              ((DOCK_RISE, DOCK_RISE + DOCK_TIP_L, 1.5), None)]:
         ring = np.array([P(s0, n_c - t / 2), P(s1, n_c - t / 2), P(s1, n_c + t / 2), P(s0, n_c + t / 2)])
         ax.fill(ring[:, 0], ring[:, 1], color="#e07b39", label=lab)
-    out = P(-DOCK_L - 4, n_c)
-    cable = np.array([P(DOCK_RISE - bl, n_c), out, (out[0] - 8, 1.5), (-12, 1.5)])
+    s_floor = -(P0[1] + n_c * math.cos(math.radians(angle)) - 1.5) / math.sin(math.radians(angle))
+    cable = np.array([P(DOCK_RISE - bl, n_c), P(s_floor, n_c), (-12, 1.5)])
     ax.plot(cable[:, 0], cable[:, 1], color="#e07b39", lw=3, alpha=0.6)
     ax.axhline(FRAME_CLEARANCE, color="#999999", ls="--", lw=1)
     ax.text(2, FRAME_CLEARANCE + 2, f"vent frame underside ({FRAME_CLEARANCE:.0f} mm)", color="#666666")
