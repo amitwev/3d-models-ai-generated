@@ -132,10 +132,10 @@ footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); pad
     <span class="chip ok">✓ גיבוי נשמר</span>
     <span class="chip ok">✓ מנועים 16000KV, מתאימים ל-2S</span>
     <span class="chip ok">✓ סוללות טעונות: 2×450, ~8×300</span>
-    <span class="chip warn">? רגולטור ה-ESP32</span>
+    <span class="chip warn">! רגולטור לא מזוהה, הסיכון מקובל</span>
   </div>
   <div class="open" role="note">
-    <div><b>פתוח לפני שלב 5:</b> מה כתוב על הרכיב השחור הקטן ליד שקע ה-USB של ה-ESP32? אם כתוב <code>AMS1117</code>, אפשר להזין אותו ישירות מהסוללה. אם כתוב משהו אחר, למשל <code>ME6211</code> או <code>662K</code>, הרכיב יישרף מ-2S ונצטרך פתרון אחר. בשלבים 2 עד 4 זה לא משנה, כי ה-ESP32 מוזן מ-USB.</div>
+    <div><b>החלטה:</b> לא מצאנו את סימון הרגולטור, וממשיכים בכל זאת. אם ה-ESP32 יישרף מהזנת 2S, נתמודד עם זה אז. כדאי להציץ בצד האחורי של הלוח. אם כתוב שם <code>AMS1117</code>, הכול בסדר.</div>
   </div>
 </header>
 
@@ -192,10 +192,12 @@ footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); pad
     <tbody>
       <tr><td><span class="pin">TX2 / GPIO17</span></td><td>פד <b>R2</b>, ליד ה-USB</td><td>משלב 2</td></tr>
       <tr><td><span class="pin">GND</span></td><td>פד המינוס של הסוללה (חוט שחור עבה)</td><td>משלב 2</td></tr>
-      <tr><td><span class="pin">VIN</span></td><td>פד הפלוס של הסוללה (חוט אדום עבה)</td><td>רק בשלב 5, ורק אם הרגולטור הוא AMS1117</td></tr>
+      <tr><td><span class="pin">VIN</span>, בפינה ליד ה-USB, צמוד ל-GND</td><td>פד הפלוס של הסוללה (חוט אדום עבה)</td><td>רק בשלב 5</td></tr>
     </tbody>
   </table></div>
+  <p class="warn"><span><b>לא 3V3 ולא VN.</b> <code>3V3</code> הוא יציאה של 3.3V, ו-8V שם שורפים את ה-ESP32 מיד. <code>VN</code> הוא קיצור של GPIO39, פין קלט, ולא מתח. הפין הנכון כתוב <code>VIN</code>, והוא נמצא בסוף אותה שורה של <code>VN</code>, ליד ה-USB.</span></p>
   <p class="warn"><span><b>על השולחן:</b> כשה-ESP32 מחובר ב-USB למחשב, מחברים לרחפן רק GND ו-TX, בלי VIN. כך לא נכנסים לו שני מקורות מתח בבת אחת.</span></p>
+  <p class="tip">על הלוח שלך הפין של GPIO17 מסומן <code>D17</code> (בלוחות אחרים <code>TX2</code>). מלחימים ל-R2: מורחים קצת פלקס, מבדילים את הפד ואת קצה החוט, ומצמידים לשנייה אחת. משתמשים בחוט דק, ומדביקים אותו ללוח בסרט כדי שמשיכה לא תתלוש את הפד. נזהרים לא לגשר בין R2 ל-T2.</p>
   <p class="tip">לא נוגעים ב: חוטי המצלמה הישנה (שחור, אדום וכחול בקצה), החוט הירוק, אנטנת המקלט (חוט שחור) והבאזר.</p>
 </section>
 
@@ -219,8 +221,10 @@ footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); pad
       <div class="check"><input type="checkbox" id="c1b" checked><label for="c1b">הדגם התלת-ממדי זז כשמטים את הלוח</label></div>
       <div class="check"><input type="checkbox" id="c1c" checked><label for="c1c"><code>version</code> → 4.0.6 CRAZYBEEF4FR</label></div>
       <div class="check"><input type="checkbox" id="c1d" checked><label for="c1d">גיבוי <code>diff all</code> נשמר לקובץ</label></div>
-      <div class="check"><input type="checkbox" id="c1e"><label for="c1e">4 המנועים מחוברים לשקעים הלבנים בפינות</label></div>
-      <div class="check"><input type="checkbox" id="c1f"><label for="c1f">לשונית Motors, <b>בלי פרופלורים</b>, זוג סוללות 300: כל מנוע בנפרד מסתובב בקצת גז</label></div>
+      <div class="check"><input type="checkbox" id="c1e"><label for="c1e">הלוח מונח בשלדה, והתקע בן 3 החוטים של כל מנוע מחובר לשקע הלבן בפינה הקרובה אליו</label></div>
+      <div class="check"><input type="checkbox" id="c1g"><label for="c1g">שתי סוללות 300 מחוברות לשני התקעים הלבנים של הצמה, אחרי שה-USB כבר מחובר ו-Connect לחוץ</label></div>
+      <div class="check"><input type="checkbox" id="c1f"><label for="c1f">לשונית Motors, <b>בלי פרופלורים</b>: מסמנים "I understand…", מעלים מחוון אחד בכל פעם עד 1050–1100, ומורידים חזרה. כל מנוע מסתובב</label></div>
+      <div class="check"><input type="checkbox" id="c1h"><label for="c1h">המנוע שמסתובב תואם לתמונה בלשונית: 1 אחורי-ימני, 2 קדמי-ימני, 3 אחורי-שמאלי, 4 קדמי-שמאלי</label></div>
       <p class="warn"><span><b>אם מנוע לא מסתובב:</b> עוצרים ומצלמים. ייתכן שבקר המנוע (ESC) ניזוק באזור השרוף בלוח.</span></p>
       <p class="tip">אחרי הבדיקה מנתקים את הסוללות. מנועי 16000KV על 2S מתחממים מהר בלי פרופלורים, לכן לא משאירים אותם מסתובבים.</p>
     </div>
