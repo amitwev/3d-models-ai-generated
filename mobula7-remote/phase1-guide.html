@@ -1,0 +1,369 @@
+<title>Mobula7 שלב 1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700&family=IBM+Plex+Sans+Hebrew:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a bench notebook — sticky step tracker on wide screens, single column on phones; copper = pads/wiring, red = kill/danger */
+:root{
+  --bg:#f2f4f1; --surface:#ffffff; --ink:#1c2422; --muted:#5b6864; --line:#cfd8d3;
+  --copper:#a8711f; --copper-soft:#f3e6cf; --sig:#24668a; --sig-soft:#dcebf3;
+  --ok:#2e7d4f; --ok-soft:#dcefe3; --danger:#c23b22; --danger-soft:#f8e1db;
+  --code-bg:#1d2624; --code-fg:#e4ece8;
+  --display:"Rubik",system-ui,sans-serif; --body:"IBM Plex Sans Hebrew",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --surface:#19211f; --ink:#e3ebe7; --muted:#97a6a0; --line:#2d3936;
+  --copper:#e0a548; --copper-soft:#3a2e1a; --sig:#73b6db; --sig-soft:#1b2f3b;
+  --ok:#62c48a; --ok-soft:#1a3326; --danger:#f0765c; --danger-soft:#3d211b;
+  --code-bg:#0c1110; --code-fg:#e4ece8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121816; --surface:#19211f; --ink:#e3ebe7; --muted:#97a6a0; --line:#2d3936;
+  --copper:#e0a548; --copper-soft:#3a2e1a; --sig:#73b6db; --sig-soft:#1b2f3b;
+  --ok:#62c48a; --ok-soft:#1a3326; --danger:#f0765c; --danger-soft:#3d211b;
+  --code-bg:#0c1110; --code-fg:#e4ece8; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px)); padding-block:28px 64px}
+.wrap{max-width:1080px; margin:0 auto; display:grid; grid-template-columns:240px minmax(0,1fr); gap:32px; align-items:start}
+@media (max-width:860px){.wrap{grid-template-columns:1fr}}
+nav.track{position:sticky; top:calc(env(safe-area-inset-top,0px) + 16px); display:flex; flex-direction:column; gap:6px; font-size:14px}
+@media (max-width:860px){nav.track{position:static}}
+nav.track .lbl{font-family:var(--mono); font-size:12px; letter-spacing:.08em; color:var(--muted); margin-bottom:4px}
+nav.track a{color:var(--ink); text-decoration:none; display:flex; gap:8px; align-items:center; padding:4px 6px; border-radius:4px}
+nav.track a:hover{background:var(--surface)}
+nav.track a:focus-visible{outline:2px solid var(--sig)}
+.dot{width:10px; height:10px; border-radius:50%; border:2px solid var(--muted); flex:none}
+.dot.done{background:var(--ok); border-color:var(--ok)}
+.dot.part{background:linear-gradient(90deg,var(--ok) 50%,transparent 50%); border-color:var(--ok)}
+.bar{height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin-top:8px}
+.bar i{display:block; height:100%; background:var(--ok); width:0; transition:width .3s}
+main{display:flex; flex-direction:column; gap:40px; min-width:0}
+header{display:flex; flex-direction:column; gap:10px; max-width:68ch}
+.eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.1em; color:var(--copper)}
+h1{font-family:var(--display); font-weight:700; font-size:clamp(28px,4.5vw,40px); line-height:1.1; margin:0; text-wrap:balance}
+h2{font-family:var(--display); font-weight:500; font-size:24px; margin:0 0 12px; text-wrap:balance}
+h3{font-family:var(--display); font-weight:500; font-size:18px; margin:0}
+p{margin:0}
+.lede{color:var(--muted); font-size:17px}
+section{display:flex; flex-direction:column; gap:14px; scroll-margin-top:16px}
+section > p, section > ul{max-width:68ch}
+.goal{border-inline-start:4px solid var(--ok); background:var(--ok-soft); padding:12px 16px; border-radius:0 6px 6px 0}
+.open{display:flex; gap:12px; align-items:flex-start; background:var(--copper-soft); border:1.5px solid var(--copper); border-radius:6px; padding:14px 16px}
+.open b{color:var(--copper)}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{font-size:13px; padding:3px 10px; border-radius:999px; background:var(--surface); border:1px solid var(--line)}
+.chip.ok{border-color:var(--ok); color:var(--ok)}
+.chip.warn{border-color:var(--copper); color:var(--copper)}
+.figure{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px; overflow-x:auto}
+svg{display:block; width:100%; height:auto; min-width:520px}
+svg text{font-family:var(--mono); font-size:11px; fill:var(--ink)}
+svg .m{fill:var(--muted)}
+.box{fill:var(--surface); stroke:var(--ink); stroke-width:1.5}
+.boxs{fill:var(--sig-soft); stroke:var(--sig); stroke-width:1.5}
+.pcb{fill:var(--bg); stroke:var(--ink); stroke-width:1.5}
+.pad{fill:var(--copper); stroke:none}
+.wire{fill:none; stroke-width:2.2}
+.w-sig{stroke:var(--sig)} .w-pos{stroke:var(--danger)} .w-gnd{stroke:var(--ink)}
+.link{fill:none; stroke:var(--muted); stroke-width:1.5; stroke-dasharray:5 4}
+.tbl{overflow-x:auto; border:1px solid var(--line); border-radius:8px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:15px}
+th,td{text-align:start; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+th{font-family:var(--mono); font-size:12px; letter-spacing:.06em; color:var(--muted); font-weight:500}
+tr:last-child td{border-bottom:0}
+td code, p code, li code{font-family:var(--mono); font-size:.9em; background:var(--bg); padding:1px 5px; border-radius:3px; direction:ltr; unicode-bidi:isolate}
+.pin{font-family:var(--mono); font-weight:500; color:var(--copper)}
+.steps{display:flex; flex-direction:column; gap:12px}
+details.step{background:var(--surface); border:1px solid var(--line); border-radius:8px}
+details.step[open]{border-color:var(--muted)}
+details.step summary{list-style:none; cursor:pointer; display:flex; gap:12px; align-items:center; padding:14px 16px}
+details.step summary::-webkit-details-marker{display:none}
+details.step summary:focus-visible{outline:2px solid var(--sig); outline-offset:2px; border-radius:8px}
+.num{font-family:var(--mono); font-size:13px; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; border:1.5px solid var(--muted); flex:none}
+.step.is-done .num{background:var(--ok); border-color:var(--ok); color:var(--surface)}
+.sum-t{flex:1; min-width:0}
+.sum-t small{display:block; color:var(--muted); font-size:13px}
+.count{font-family:var(--mono); font-size:12px; color:var(--muted)}
+.body{padding:0 16px 16px; display:flex; flex-direction:column; gap:12px}
+.check{display:flex; gap:10px; align-items:flex-start}
+.check input{width:20px; height:20px; margin-top:3px; accent-color:var(--ok); flex:none}
+.check label{cursor:pointer}
+.check input:checked + label{color:var(--muted); text-decoration:line-through; text-decoration-color:var(--line)}
+.warn{display:flex; gap:10px; background:var(--danger-soft); color:var(--ink); border-inline-start:4px solid var(--danger); padding:10px 14px; border-radius:0 6px 6px 0; font-size:15px}
+.warn b{color:var(--danger)}
+.tip{font-size:14px; color:var(--muted)}
+.code{position:relative; background:var(--code-bg); color:var(--code-fg); border-radius:8px; overflow:hidden}
+.code pre{margin:0; padding:16px; overflow-x:auto; font-family:var(--mono); font-size:14px; line-height:1.6; direction:ltr; text-align:left}
+.code button{position:absolute; top:8px; left:8px; font-family:var(--body); font-size:13px; padding:4px 10px; border-radius:4px; border:1px solid #5d6b66; background:transparent; color:var(--code-fg); cursor:pointer}
+.code button:focus-visible{outline:2px solid var(--sig)}
+.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:14px 16px; display:flex; flex-direction:column; gap:6px}
+ul{margin:0; padding-inline-start:20px; display:flex; flex-direction:column; gap:4px}
+.reset{align-self:flex-start; font-family:var(--body); font-size:13px; background:none; border:1px solid var(--line); color:var(--muted); border-radius:4px; padding:4px 10px; cursor:pointer}
+footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); padding-top:16px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<nav class="track" aria-label="התקדמות">
+  <span class="lbl">התקדמות</span>
+  <a href="#s1"><i class="dot" data-dot="1"></i>1 · בדיקת בריאות</a>
+  <a href="#s2"><i class="dot" data-dot="2"></i>2 · RX על השולחן</a>
+  <a href="#s3"><i class="dot" data-dot="3"></i>3 · שלט + אייפון</a>
+  <a href="#s4"><i class="dot" data-dot="4"></i>4 · בדיקות ניתוק</a>
+  <a href="#s5"><i class="dot" data-dot="5"></i>5 · שקילה והרכבה</a>
+  <a href="#s6"><i class="dot" data-dot="6"></i>6 · ריחוף ראשון</a>
+  <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+  <span class="tip" id="barTxt"></span>
+  <span class="lbl" style="margin-top:14px">עיון</span>
+  <a href="#arch">איך זה מחובר</a>
+  <a href="#wiring">חיווט</a>
+  <a href="#power">סוללות</a>
+  <a href="#safety">כללי בטיחות</a>
+  <a href="#cli">פקודת Betaflight</a>
+</nav>
+
+<main>
+<header>
+  <span class="eyebrow">MOBULA7 · CRAZYBEE F4FR V2.0 · BF 4.0.6</span>
+  <h1>להחזיר את ה-Mobula7 לאוויר</h1>
+  <p class="lede">שלב 1: אב-טיפוס על השולחן, לפני שמדפיסים. הרחפן מקבל פקודות מ-ESP32, והאייפון משמש כשלט. סמן את השלבים כאן תוך כדי עבודה. הסימונים נשמרים רק בדפדפן הזה.</p>
+  <p class="goal"><b>שלב 1 מצליח כש:</b> הרחפן מרחף נמוך בחדר עם ה-ESP32 עליו, נשלט ממקלות במסך האייפון, ו-KILL או כל ניתוק עוצרים את המנועים מיד.</p>
+  <div class="chips">
+    <span class="chip ok">✓ לוח חי, ג'יירו תקין</span>
+    <span class="chip ok">✓ גיבוי נשמר</span>
+    <span class="chip ok">✓ מנועים 16000KV, מתאימים ל-2S</span>
+    <span class="chip ok">✓ סוללות טעונות: 2×450, ~8×300</span>
+    <span class="chip warn">? רגולטור ה-ESP32</span>
+  </div>
+  <div class="open" role="note">
+    <div><b>פתוח לפני שלב 5:</b> מה כתוב על הרכיב השחור הקטן ליד שקע ה-USB של ה-ESP32? אם כתוב <code>AMS1117</code>, אפשר להזין אותו ישירות מהסוללה. אם כתוב משהו אחר, למשל <code>ME6211</code> או <code>662K</code>, הרכיב יישרף מ-2S ונצטרך פתרון אחר. בשלבים 2 עד 4 זה לא משנה, כי ה-ESP32 מוזן מ-USB.</div>
+  </div>
+</header>
+
+<section id="arch">
+  <h2>איך זה מחובר</h2>
+  <div class="figure">
+    <svg viewBox="0 0 760 170" role="img" aria-label="אייפון מתחבר ב-Wi-Fi ל-ESP32 בשלט, שמשדר ב-ESP-NOW ל-ESP32 על הרחפן, שמדבר iBUS עם בקר הטיסה">
+      <rect class="box" x="590" y="40" width="150" height="80" rx="12"/>
+      <text x="665" y="72" text-anchor="middle">iPhone Air</text>
+      <text class="m" x="665" y="92" text-anchor="middle">Safari · מקלות</text>
+      <rect class="boxs" x="400" y="40" width="150" height="80" rx="6"/>
+      <text x="475" y="68" text-anchor="middle">ESP32 "TX"</text>
+      <text class="m" x="475" y="86" text-anchor="middle">בשלט · ARM · KILL</text>
+      <text class="m" x="475" y="104" text-anchor="middle">192.168.4.1</text>
+      <rect class="boxs" x="210" y="40" width="150" height="80" rx="6"/>
+      <text x="285" y="72" text-anchor="middle">ESP32 "RX"</text>
+      <text class="m" x="285" y="92" text-anchor="middle">על הרחפן</text>
+      <rect class="box" x="20" y="40" width="150" height="80" rx="6"/>
+      <text x="95" y="72" text-anchor="middle">Crazybee F4FR</text>
+      <text class="m" x="95" y="92" text-anchor="middle">Betaflight 4.0.6</text>
+      <path class="link" d="M588 80 H552"/><text class="m" x="570" y="140" text-anchor="middle">Wi-Fi</text><text class="m" x="570" y="156" text-anchor="middle">WebSocket</text>
+      <path class="link" d="M398 80 H362"/><text class="m" x="380" y="140" text-anchor="middle">ESP-NOW</text><text class="m" x="380" y="156" text-anchor="middle">~50 פעמים בשנייה</text>
+      <path class="wire w-sig" d="M208 80 H172"/><text class="m" x="190" y="140" text-anchor="middle">חוט · iBUS</text><text class="m" x="190" y="156" text-anchor="middle">GPIO17 → R2</text>
+    </svg>
+  </div>
+  <p>הטלפון לא צריך אינטרנט ולא צריך אפליקציה. מתחברים לרשת ה-Wi-Fi של השלט ופותחים את הכתובת בדפדפן. כפתורי ARM ו-KILL מחוברים ישירות ל-ESP32, כך שהם עובדים גם אם הטלפון נתקע.</p>
+</section>
+
+<section id="wiring">
+  <h2>חיווט ה-ESP32 לרחפן</h2>
+  <div class="figure">
+    <svg viewBox="0 0 760 300" role="img" aria-label="שלושה חוטים: GPIO17 לפד R2, GND לפד מינוס של הסוללה, VIN לפד פלוס של הסוללה">
+      <rect class="pcb" x="440" y="30" width="250" height="240" rx="10"/>
+      <text x="565" y="56" text-anchor="middle">Crazybee F4FR V2.0 · צד עליון</text>
+      <rect class="box" x="462" y="210" width="40" height="22" rx="3"/><text class="m" x="482" y="250" text-anchor="middle">USB</text>
+      <circle class="pad" cx="540" cy="150" r="7"/><text x="556" y="146">T2</text>
+      <circle class="pad" cx="540" cy="176" r="7"/><text x="556" y="180">R2</text>
+      <rect class="pad" x="470" y="80" width="18" height="14" rx="2"/><text x="494" y="92">− סוללה</text>
+      <rect class="pad" x="470" y="110" width="18" height="14" rx="2"/><text x="494" y="122">+ סוללה</text>
+      <text class="m" x="600" y="230">ליד R2 ו-T2 אין עוד חוטים</text>
+      <rect class="boxs" x="60" y="70" width="170" height="170" rx="6"/>
+      <text x="145" y="96" text-anchor="middle">ESP32 "RX"</text>
+      <text class="pin" x="214" y="138" text-anchor="end">GND</text><circle class="pad" cx="226" cy="134" r="5"/>
+      <text class="pin" x="214" y="168" text-anchor="end">VIN</text><circle class="pad" cx="226" cy="164" r="5"/>
+      <text class="pin" x="214" y="198" text-anchor="end">TX2 · GPIO17</text><circle class="pad" cx="226" cy="194" r="5"/>
+      <path class="wire w-gnd" d="M231 134 C330 134 380 87 468 87"/>
+      <path class="wire w-pos" d="M231 164 C330 164 380 117 468 117"/>
+      <path class="wire w-sig" d="M231 194 C340 194 420 176 533 176"/>
+      <text class="m" x="340" y="80">שחור</text><text class="m" x="340" y="148">אדום</text><text class="m" x="340" y="212">אות</text>
+    </svg>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>ESP32 שעל הרחפן</th><th>Crazybee</th><th>מתי</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pin">TX2 / GPIO17</span></td><td>פד <b>R2</b>, ליד ה-USB</td><td>משלב 2</td></tr>
+      <tr><td><span class="pin">GND</span></td><td>פד המינוס של הסוללה (חוט שחור עבה)</td><td>משלב 2</td></tr>
+      <tr><td><span class="pin">VIN</span></td><td>פד הפלוס של הסוללה (חוט אדום עבה)</td><td>רק בשלב 5, ורק אם הרגולטור הוא AMS1117</td></tr>
+    </tbody>
+  </table></div>
+  <p class="warn"><span><b>על השולחן:</b> כשה-ESP32 מחובר ב-USB למחשב, מחברים לרחפן רק GND ו-TX, בלי VIN. כך לא נכנסים לו שני מקורות מתח בבת אחת.</span></p>
+  <p class="tip">לא נוגעים ב: חוטי המצלמה הישנה (שחור, אדום וכחול בקצה), החוט הירוק, אנטנת המקלט (חוט שחור) והבאזר.</p>
+</section>
+
+<section id="power">
+  <h2>סוללות</h2>
+  <div class="grid2">
+    <div class="card"><h3>תמיד זוג זהה</h3><p>הצמה מחברת שתי סוללות בטור (2S). מחברים לה <b>300+300</b> או <b>450+450</b>, ואף פעם לא ערבוב. אם מערבבים, הסוללה הקטנה מתרוקנת יתר על המידה.</p></div>
+    <div class="card"><h3>לטיסות עם ESP32: זוג 300</h3><p>זוג 300 שוקל כ-16 גרם, וזוג 450 כ-24 גרם. עם ה-ESP32 על הרחפן כל גרם חשוב, לכן מתחילים בזוג 300.</p></div>
+    <div class="card"><h3>לפני כל חיבור</h3><p>בודקים שהסוללה לא נפוחה. סוללה נפוחה לא משתמשים בה. נוחתים כש-Betaflight מתריע (3.2V לתא).</p></div>
+  </div>
+</section>
+
+<section id="steps">
+  <h2>שלבי העבודה</h2>
+  <div class="steps" id="stepList">
+
+  <details class="step" id="s1" data-step="1" open>
+    <summary><span class="num">1</span><span class="sum-t">בדיקת בריאות<small>Betaflight · בלי קוד ובלי הלחמה</small></span><span class="count"></span></summary>
+    <div class="body">
+      <div class="check"><input type="checkbox" id="c1a" checked><label for="c1a">חיבור USB ל-app.betaflight.com בכרום</label></div>
+      <div class="check"><input type="checkbox" id="c1b" checked><label for="c1b">הדגם התלת-ממדי זז כשמטים את הלוח</label></div>
+      <div class="check"><input type="checkbox" id="c1c" checked><label for="c1c"><code>version</code> → 4.0.6 CRAZYBEEF4FR</label></div>
+      <div class="check"><input type="checkbox" id="c1d" checked><label for="c1d">גיבוי <code>diff all</code> נשמר לקובץ</label></div>
+      <div class="check"><input type="checkbox" id="c1e"><label for="c1e">4 המנועים מחוברים לשקעים הלבנים בפינות</label></div>
+      <div class="check"><input type="checkbox" id="c1f"><label for="c1f">לשונית Motors, <b>בלי פרופלורים</b>, זוג סוללות 300: כל מנוע בנפרד מסתובב בקצת גז</label></div>
+      <p class="warn"><span><b>אם מנוע לא מסתובב:</b> עוצרים ומצלמים. ייתכן שבקר המנוע (ESC) ניזוק באזור השרוף בלוח.</span></p>
+      <p class="tip">אחרי הבדיקה מנתקים את הסוללות. מנועי 16000KV על 2S מתחממים מהר בלי פרופלורים, לכן לא משאירים אותם מסתובבים.</p>
+    </div>
+  </details>
+
+  <details class="step" id="s2" data-step="2">
+    <summary><span class="num">2</span><span class="sum-t">ה-ESP32 של הרחפן, על השולחן<small>הלחמה של 2 חוטים · פקודת CLI · לשונית Receiver</small></span><span class="count"></span></summary>
+    <div class="body">
+      <div class="check"><input type="checkbox" id="c2a"><label for="c2a">צריבת קוד הבדיקה ל-ESP32 "RX" (הקוד יגיע בהמשך)</label></div>
+      <div class="check"><input type="checkbox" id="c2b"><label for="c2b">הלחמת חוט מ-<b>R2</b> וחוט מ-<b>GND</b> וחיבורם ל-GPIO17 ול-GND</label></div>
+      <div class="check"><input type="checkbox" id="c2c"><label for="c2c">הדבקת <a href="#cli">פקודת ה-CLI</a> ב-Betaflight ושמירה</label></div>
+      <div class="check"><input type="checkbox" id="c2d"><label for="c2d">בלשונית Receiver הפסים זזים לפי מה שה-ESP32 שולח</label></div>
+      <p class="tip">ה-ESP32 מוזן מ-USB, והרחפן מוזן מ-USB של המחשב. לא מחברים סוללה.</p>
+    </div>
+  </details>
+
+  <details class="step" id="s3" data-step="3">
+    <summary><span class="num">3</span><span class="sum-t">השלט והאייפון<small>breadboard · כפתורי ARM ו-KILL · דף שליטה</small></span><span class="count"></span></summary>
+    <div class="body">
+      <div class="check"><input type="checkbox" id="c3a"><label for="c3a">צריבת הקוד ל-ESP32 "TX"</label></div>
+      <div class="check"><input type="checkbox" id="c3b"><label for="c3b">כפתור מקלדת בין <span class="pin">GPIO25</span> ל-GND (זה ARM), וכפתור בין <span class="pin">GPIO26</span> ל-GND (זה KILL)</label></div>
+      <div class="check"><input type="checkbox" id="c3c"><label for="c3c">האייפון מתחבר לרשת של השלט, ופותח <code>http://192.168.4.1</code></label></div>
+      <div class="check"><input type="checkbox" id="c3d"><label for="c3d">המקלות במסך מזיזים את Roll, Pitch, Throttle ו-Yaw בלשונית Receiver</label></div>
+      <div class="check"><input type="checkbox" id="c3e"><label for="c3e">החזקת ARM חצי שנייה, כשהגז למטה, מעלה את AUX1. לחיצה על KILL מורידה אותו</label></div>
+    </div>
+  </details>
+
+  <details class="step" id="s4" data-step="4">
+    <summary><span class="num">4</span><span class="sum-t">בדיקות ניתוק<small>בלי פרופלורים · מנועים חמושים · זוג סוללות</small></span><span class="count"></span></summary>
+    <div class="body">
+      <div class="check"><input type="checkbox" id="c4a"><label for="c4a">לחיצה על KILL: המנועים נעצרים מיד</label></div>
+      <div class="check"><input type="checkbox" id="c4b"><label for="c4b">נעילת האייפון או סגירת הדף: המנועים נעצרים</label></div>
+      <div class="check"><input type="checkbox" id="c4c"><label for="c4c">ניתוק החשמל לשלט: המנועים נעצרים</label></div>
+      <div class="check"><input type="checkbox" id="c4d"><label for="c4d">אחרי שהקשר חוזר, המנועים <b>לא</b> מתחילים לבד. צריך ללחוץ שוב על ARM</label></div>
+      <div class="check"><input type="checkbox" id="c4e"><label for="c4e">ARM לא עובד כשהגז במסך למעלה</label></div>
+      <p class="warn"><span><b>אם אחת מהבדיקות נכשלה, לא ממשיכים לשלב 5.</b></span></p>
+    </div>
+  </details>
+
+  <details class="step" id="s5" data-step="5">
+    <summary><span class="num">5</span><span class="sum-t">שקילה והרכבה<small>דורש תשובה על הרגולטור</small></span><span class="count"></span></summary>
+    <div class="body">
+      <div class="check"><input type="checkbox" id="c5a"><label for="c5a">בדקתי שהרגולטור על ה-ESP32 הוא AMS1117</label></div>
+      <div class="check"><input type="checkbox" id="c5b"><label for="c5b">קיצרתי את פיני ה-ESP32 עם קאטר, או הסרתי אותם</label></div>
+      <div class="check"><input type="checkbox" id="c5c"><label for="c5c">הלחמתי VIN לפד ה-+ ו-GND לפד ה-− של הסוללה</label></div>
+      <div class="check"><input type="checkbox" id="c5d"><label for="c5d">הצמדתי את ה-ESP32 עם סרט דו-צדדי ואזיקון, רחוק מהפרופלורים</label></div>
+      <div class="check"><input type="checkbox" id="c5e"><label for="c5e">שקלתי את הרחפן עם הסוללות, אם יש משקל מטבח</label></div>
+    </div>
+  </details>
+
+  <details class="step" id="s6" data-step="6">
+    <summary><span class="num">6</span><span class="sum-t">ריחוף ראשון<small>חדר פתוח · חצי מטר · עד דקה</small></span><span class="count"></span></summary>
+    <div class="body">
+      <div class="check"><input type="checkbox" id="c6a"><label for="c6a">הפרופלורים מורכבים בכיוון הנכון</label></div>
+      <div class="check"><input type="checkbox" id="c6b"><label for="c6b">אין אנשים או חיות במרחק של 2 מטר</label></div>
+      <div class="check"><input type="checkbox" id="c6c"><label for="c6c">הרחפן מתרומם ונשלט בגובה של כחצי מטר</label></div>
+      <div class="check"><input type="checkbox" id="c6d"><label for="c6d">אם הרחפן לא התרומם, רשמתי לאיזה ערך גז הגעתי</label></div>
+    </div>
+  </details>
+
+  </div>
+  <button class="reset" type="button" id="reset">איפוס הסימונים</button>
+</section>
+
+<section id="safety">
+  <h2>כללי בטיחות שהקוד מבטיח</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>מה קורה</th><th>מה הרחפן עושה</th></tr></thead>
+    <tbody>
+      <tr><td>מחברים סוללה</td><td>לא חמוש. אין דרך להתחמש בלי לחיצה על ARM.</td></tr>
+      <tr><td>החזקת ARM חצי שנייה</td><td>מתחמש, אבל רק אם הגז במסך נמוך והטלפון מחובר.</td></tr>
+      <tr><td>לחיצה על KILL</td><td>המנועים נעצרים מיד. כדי להתחמש שוב צריך לשחרר את KILL וללחוץ על ARM.</td></tr>
+      <tr><td>הטלפון מתנתק יותר מ-0.3 שנייה</td><td>כמו KILL.</td></tr>
+      <tr><td>השלט מתנתק יותר מ-0.15 שנייה</td><td>ה-ESP32 שעל הרחפן שולח "בטל חימוש", והמנועים נעצרים מיד.</td></tr>
+      <tr><td>הקשר חוזר</td><td>נשאר לא חמוש עד לחיצה חדשה על ARM.</td></tr>
+      <tr><td>ה-ESP32 שעל הרחפן עצמו מת</td><td>ה-failsafe של Betaflight עוצר את המנועים, אחרי השהיה קצרה.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tip">מצב הטיסה תמיד Angle: הרחפן מתיישר לבד כשעוזבים את המקל הימני. המקל השמאלי הוא גז וסיבוב, והימני הטיה (Mode 2).</p>
+</section>
+
+<section id="cli">
+  <h2>פקודת Betaflight</h2>
+  <p>מדביקים בלשונית CLI <b>בשלב 2</b>, לא לפני. הפקודה מעבירה את UART2 לקבלת פקודות מה-ESP32, מכבה את המקלט הפנימי, הופכת את ARM כך שיפעל רק כשהערוץ גבוה, ומגדירה עצירת מנועים בניתוק. הגיבוי שלך מאפשר להחזיר הכול אחורה.</p>
+  <div class="code"><button type="button" id="copy">העתק</button><pre id="cliText">feature -RX_SPI
+feature RX_SERIAL
+serial 0 0 115200 57600 0 115200
+serial 1 64 115200 57600 0 115200
+set serialrx_provider = IBUS
+map AETR1234
+aux 0 0 0 1700 2100 0 0
+aux 1 1 1 900 1300 0 0
+aux 2 13 2 1700 2100 0 0
+set failsafe_procedure = DROP
+set failsafe_delay = 1
+save</pre></div>
+  <p class="tip">אחרי <code>save</code> הלוח מאתחל את עצמו ומתנתק לרגע. זה תקין.</p>
+</section>
+
+<section>
+  <h2>לא בשלב הזה</h2>
+  <ul>
+    <li>השלט המודפס עם ידיות הקונסולה, התופסן המתכוונן לטלפון והתושבת המודפסת לרחפן.</li>
+    <li>מתח הסוללה על מסך הטלפון.</li>
+    <li>כפתור MODE ומצבי טיסה נוספים.</li>
+    <li>טיסה בחוץ ובדיקת טווח.</li>
+    <li>עדכון Betaflight או שינוי הכיול.</li>
+  </ul>
+</section>
+
+<footer>מסמך התכנון המלא נמצא בריפו, בקובץ <code>docs/superpowers/specs/2026-10-16-mobula7-esp32-remote-phase1-design.md</code>. הקוד לשני ה-ESP32 ודף השליטה ייכתבו אחרי שתאשר את התכנון.</footer>
+</main>
+</div>
+
+<script>
+document.documentElement.dir='rtl'; document.documentElement.lang='he';
+const KEY='mobula7-phase1-v1';
+const boxes=[...document.querySelectorAll('.check input')];
+const defaults=Object.fromEntries(boxes.map(b=>[b.id,b.defaultChecked]));
+let saved={};
+try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+boxes.forEach(b=>{if(b.id in saved)b.checked=!!saved[b.id];});
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(Object.fromEntries(boxes.map(b=>[b.id,b.checked]))));}catch(e){}}
+function render(){
+  let all=0,done=0;
+  document.querySelectorAll('details.step').forEach(st=>{
+    const bs=[...st.querySelectorAll('.check input')]; const d=bs.filter(b=>b.checked).length;
+    all+=bs.length; done+=d;
+    st.querySelector('.count').textContent=d+'/'+bs.length;
+    st.classList.toggle('is-done',d===bs.length);
+    const dot=document.querySelector('[data-dot="'+st.dataset.step+'"]');
+    dot.classList.toggle('done',d===bs.length); dot.classList.toggle('part',d>0&&d<bs.length);
+  });
+  document.getElementById('bar').style.width=(all?done/all*100:0)+'%';
+  document.getElementById('barTxt').textContent=done+' מתוך '+all+' משימות';
+}
+boxes.forEach(b=>b.addEventListener('change',()=>{persist();render();}));
+document.getElementById('reset').addEventListener('click',()=>{boxes.forEach(b=>b.checked=defaults[b.id]);try{localStorage.removeItem(KEY);}catch(e){}render();});
+const copyBtn=document.getElementById('copy'), pre=document.getElementById('cliText');
+copyBtn.addEventListener('click',()=>{
+  const done=()=>{copyBtn.textContent='הועתק';setTimeout(()=>copyBtn.textContent='העתק',1500);};
+  const fallback=()=>{const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);copyBtn.textContent='סומן, העתק ידנית';};
+  try{navigator.clipboard.writeText(pre.textContent).then(done,fallback);}catch(e){fallback();}
+});
+render();
+</script>
