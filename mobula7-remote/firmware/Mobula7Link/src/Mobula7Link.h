@@ -3,3 +3,4 @@
 #include "link_config.h"
 #include "ibus.h"
 #include "link_packet.h"
+#include "rx_link.h"
