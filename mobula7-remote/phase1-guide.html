@@ -234,10 +234,12 @@ footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); pad
   <details class="step" id="s2" data-step="2">
     <summary><span class="num">2</span><span class="sum-t">ה-ESP32 של הרחפן, על השולחן<small>הלחמה של 2 חוטים · פקודת CLI · לשונית Receiver</small></span><span class="count"></span></summary>
     <div class="body">
-      <div class="check"><input type="checkbox" id="c2a"><label for="c2a">צריבת קוד הבדיקה ל-ESP32 "RX" (הקוד יגיע בהמשך)</label></div>
-      <div class="check"><input type="checkbox" id="c2b"><label for="c2b">הלחמת חוט מ-<b>R2</b> וחוט מ-<b>GND</b> וחיבורם ל-GPIO17 ול-GND</label></div>
+      <div class="check"><input type="checkbox" id="c2e"><label for="c2e">התקנת Arduino IDE 2, תמיכה ב-ESP32 3.x והספרייה Mobula7Link, לפי <code>mobula7-remote/README.md</code> סעיף 1</label></div>
+      <div class="check"><input type="checkbox" id="c2a"><label for="c2a">צריבת <code>mobula7_rx.ino</code> כשהשורה <code>RX_SELFTEST 1</code>. ב-Serial Monitor (115200) מופיעה כל שנייה שורה <code>link=1 arm=1000 thr=1000 roll=…</code>, ו-roll משתנה</label></div>
+      <div class="check"><input type="checkbox" id="c2b"><label for="c2b">הלחמת חוט מפד <b>R2</b> לפין <b>D17</b>, וחוט מפד המינוס של הסוללה לפין <b>GND</b>. בלי VIN</label></div>
       <div class="check"><input type="checkbox" id="c2c"><label for="c2c">הדבקת <a href="#cli">פקודת ה-CLI</a> ב-Betaflight ושמירה</label></div>
-      <div class="check"><input type="checkbox" id="c2d"><label for="c2d">בלשונית Receiver הפסים זזים לפי מה שה-ESP32 שולח</label></div>
+      <div class="check"><input type="checkbox" id="c2d"><label for="c2d">בלשונית Receiver הפס של <b>Roll</b> זז לאט בין 1000 ל-2000. Throttle ו-AUX1 עומדים על 1000, ושאר המקלות על 1500</label></div>
+      <div class="check"><input type="checkbox" id="c2f"><label for="c2f">הצפצוף של "אין מקלט" פסק</label></div>
       <p class="tip">ה-ESP32 מוזן מ-USB, והרחפן מוזן מ-USB של המחשב. לא מחברים סוללה.</p>
     </div>
   </details>
