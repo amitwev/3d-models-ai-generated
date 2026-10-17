@@ -234,6 +234,7 @@ Expected: `all tests passed`, exit 0.
   };
   ```
 - **Rules (copied from Global Constraints):**
+  - A new `TxController` starts with the kill latch **set**. This is what blocks arming at power-up with ARM already held.
   - `kill_btn` or `!phone_alive` → disarm, set the kill latch and cancel calibration.
   - The kill latch clears when `kill_btn` is released, the phone is alive and `arm_btn` is released.
   - Arm when `arm_btn` has been continuously held ≥ 500 ms, and the press began after the latch cleared, with throttle < 1050, the phone alive, no kill, and not calibrating.
