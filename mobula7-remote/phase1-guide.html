@@ -313,8 +313,7 @@ footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); pad
 <section id="cli">
   <h2>פקודת Betaflight</h2>
   <p>מדביקים בלשונית CLI <b>בשלב 2</b>, לא לפני. הפקודה מעבירה את UART2 לקבלת פקודות מה-ESP32, מכבה את המקלט הפנימי, הופכת את ARM כך שיפעל רק כשהערוץ גבוה, מגדירה עצירת מנועים בניתוק, ומחזירה את הצפצוף כשהקשר אובד.</p>
-  <div class="code"><button type="button" id="copy">העתק</button><pre id="cliText">feature -RX_SPI
-feature RX_SERIAL
+  <div class="code"><button type="button" id="copy">העתק</button><pre id="cliText">feature RX_SERIAL
 serial 0 0 115200 57600 0 115200
 serial 1 64 115200 57600 0 115200
 set serialrx_provider = IBUS
@@ -329,6 +328,7 @@ set yaw_motors_reversed = ON
 beeper RX_LOST
 beeper RX_LOST_LANDING
 save</pre></div>
+  <p class="warn"><span><b>מדביקים שורה אחת בכל פעם ולוחצים Enter.</b> שדה הפקודה של Betaflight מחבר הדבקה של כמה שורות לשורה אחת, והפקודה נכשלת.</span></p>
   <p class="tip">אחרי <code>save</code> הלוח מאתחל את עצמו ומתנתק לרגע. זה תקין.</p>
 </section>
 

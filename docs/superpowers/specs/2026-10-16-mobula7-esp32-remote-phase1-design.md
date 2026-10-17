@@ -186,7 +186,6 @@ Crazybee F4FR, UART2 (serial 1) ── Betaflight 2026.6.2
 מודבק בשלב 2. `motor_output_limit` ו-`yaw_motors_reversed` כבר הוגדרו, וחוזרים כאן כדי שהבלוק יהיה שלם. לפני שמגישים את הבלוק למשתמש, הבונה מאמת אותו מול התחביר של Betaflight 2026.x: מספרי ה-function של `serial`, ה-mode IDs של `aux`, ושמות ה-features ו-beeper.
 
 ```
-feature -RX_SPI
 feature RX_SERIAL
 serial 0 0 115200 57600 0 115200
 serial 1 64 115200 57600 0 115200
@@ -263,3 +262,15 @@ save
 - דפוסי ההבהוב של LED המצב.
 - איך לאמת את בלוק ה-CLI מול 2026.6.2, ותיקונו אם נדרש.
 - בדיקות אוטומטיות למה שאפשר לבדוק בלי חומרה: בניית מסגרת iBUS, checksum, ולוגיקת החימוש וה-KILL.
+
+## עדכון 2026-10-17: שלב 2 עבר
+
+- `RX_SPI` לא קיים ב-build של 2026.6.2, ולכן השורה הוסרה מהבלוק.
+- הבלוק מודבק שורה-שורה: שדה ה-CLI מחבר הדבקה של כמה שורות לשורה אחת.
+- `diff all` אחרי ההגדרה מראה:
+  - `serial UART2 64 …`;
+  - שלוש שורות `aux` כמתוכנן;
+  - `failsafe_delay = 2`, `yaw_motors_reversed = ON`, ו-`motor_output_limit = 80` (בתוך profile 0).
+- השורות `IBUS`, `AETR`, `DROP` ו-beeper לא מופיעות ב-diff, כי אלה ברירות המחדל.
+- כיול Accelerometer עדיין פתוח.
+- ESP32 RX במצב SELFTEST: ערוץ Roll נע 1000↔2000 בלשונית Receiver. כלומר ההלחמה R2/GND תקינה ו-iBUS נקלט.
