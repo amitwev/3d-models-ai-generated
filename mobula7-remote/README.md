@@ -5,6 +5,23 @@
 - דף העבודה (צ'קליסט): `phase1-guide.html`
 - מסמך התכנון: `../docs/superpowers/specs/2026-10-16-mobula7-esp32-remote-phase1-design.md`
 
+## 0. משיכת הקבצים עם git
+
+מהתיקייה של הריפו:
+
+```bash
+git fetch origin claude/serene-meitner-7wc24f
+git checkout claude/serene-meitner-7wc24f
+git pull
+```
+
+כדי שהספרייה ב-Arduino תתעדכן מעצמה אחרי כל `git pull`, מקשרים אותה לריפו במקום להעתיק אותה. מריצים פעם אחת, מתיקיית הריפו:
+
+```bash
+rm -rf ~/Documents/Arduino/libraries/Mobula7Link
+ln -s "$PWD/mobula7-remote/firmware/Mobula7Link" ~/Documents/Arduino/libraries/Mobula7Link
+```
+
 ## 1. התקנה חד-פעמית ב-Arduino IDE
 
 1. מתקינים את **Arduino IDE 2** מהכתובת arduino.cc/en/software.
@@ -14,7 +31,7 @@
      `https://espressif.github.io/arduino-esp32/package_esp32_index.json`
    - פותחים את **Boards Manager** (האייקון השני בסרגל השמאלי), מחפשים `esp32` ומתקינים את **esp32 by Espressif Systems**, גרסה **3.x**.
 3. מתקינים את הספרייה של הפרויקט:
-   - מעתיקים את התיקייה `firmware/Mobula7Link` אל `~/Documents/Arduino/libraries/`.
+   - מקשרים אותה לריפו (ראו סעיף 0), או מעתיקים את התיקייה `firmware/Mobula7Link` אל `~/Documents/Arduino/libraries/`.
    - אם התיקייה `libraries` לא קיימת, יוצרים אותה.
    - **סוגרים ופותחים מחדש** את Arduino IDE.
 
