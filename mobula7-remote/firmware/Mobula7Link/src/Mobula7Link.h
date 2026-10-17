@@ -2,3 +2,4 @@
 #pragma once
 #include "link_config.h"
 #include "ibus.h"
+#include "link_packet.h"
