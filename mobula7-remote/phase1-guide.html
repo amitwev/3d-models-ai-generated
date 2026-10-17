@@ -123,14 +123,16 @@ footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); pad
 
 <main>
 <header>
-  <span class="eyebrow">MOBULA7 · CRAZYBEE F4FR V2.0 · BF 4.0.6</span>
+  <span class="eyebrow">MOBULA7 · CRAZYBEE F4FR V2.0 · BF 2026.6.2</span>
   <h1>להחזיר את ה-Mobula7 לאוויר</h1>
   <p class="lede">שלב 1: אב-טיפוס על השולחן, לפני שמדפיסים. הרחפן מקבל פקודות מ-ESP32, והאייפון משמש כשלט. סמן את השלבים כאן תוך כדי עבודה. הסימונים נשמרים רק בדפדפן הזה.</p>
   <p class="goal"><b>שלב 1 מצליח כש:</b> הרחפן מרחף נמוך בחדר עם ה-ESP32 עליו, נשלט ממקלות במסך האייפון, ו-KILL או כל ניתוק עוצרים את המנועים מיד.</p>
   <div class="chips">
     <span class="chip ok">✓ לוח חי, ג'יירו תקין</span>
     <span class="chip ok">✓ גיבוי נשמר</span>
-    <span class="chip ok">✓ מנועים 16000KV, מתאימים ל-2S</span>
+    <span class="chip ok">✓ 4 מנועים חדשים 19000KV, מוגבלים ל-80%</span>
+    <span class="chip ok">✓ כיווני המנועים תוקנו</span>
+    <span class="chip warn">! כיול אופק: לפני טיסה</span>
     <span class="chip ok">✓ סוללות טעונות: 2×450, ~8×300</span>
     <span class="chip warn">! רגולטור לא מזוהה, הסיכון מקובל</span>
   </div>
@@ -155,7 +157,7 @@ footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); pad
       <text class="m" x="285" y="92" text-anchor="middle">על הרחפן</text>
       <rect class="box" x="20" y="40" width="150" height="80" rx="6"/>
       <text x="95" y="72" text-anchor="middle">Crazybee F4FR</text>
-      <text class="m" x="95" y="92" text-anchor="middle">Betaflight 4.0.6</text>
+      <text class="m" x="95" y="92" text-anchor="middle">Betaflight 2026.6.2</text>
       <path class="link" d="M588 80 H552"/><text class="m" x="570" y="140" text-anchor="middle">Wi-Fi</text><text class="m" x="570" y="156" text-anchor="middle">WebSocket</text>
       <path class="link" d="M398 80 H362"/><text class="m" x="380" y="140" text-anchor="middle">ESP-NOW</text><text class="m" x="380" y="156" text-anchor="middle">~50 פעמים בשנייה</text>
       <path class="wire w-sig" d="M208 80 H172"/><text class="m" x="190" y="140" text-anchor="middle">חוט · iBUS</text><text class="m" x="190" y="156" text-anchor="middle">GPIO17 → R2</text>
@@ -219,16 +221,13 @@ footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); pad
     <div class="body">
       <div class="check"><input type="checkbox" id="c1a" checked><label for="c1a">חיבור USB ל-app.betaflight.com בכרום</label></div>
       <div class="check"><input type="checkbox" id="c1b" checked><label for="c1b">הדגם התלת-ממדי זז כשמטים את הלוח</label></div>
-      <div class="check"><input type="checkbox" id="c1c" checked><label for="c1c"><code>version</code> → 4.0.6 CRAZYBEEF4FR</label></div>
-      <div class="check"><input type="checkbox" id="c1d" checked><label for="c1d">גיבוי <code>diff all</code> נשמר לקובץ</label></div>
-      <p class="warn"><span><b>מכאן והלאה עובדים ב-Betaflight Configurator 10.5.1</b>, תוכנה שמתקינים במק. האתר app.betaflight.com לא תומך ב-4.0.6 ומציג רק CLI. במצב CLI לא מחברים סוללה.</span></p>
-      <div class="check"><input type="checkbox" id="c1i"><label for="c1i">התקנת Configurator 10.5.1 מ-<code>github.com/betaflight/betaflight-configurator/releases/tag/10.5.1</code>, ופתיחה ראשונה בלחיצה ימנית ← Open</label></div>
-      <div class="check"><input type="checkbox" id="c1e"><label for="c1e">הלוח מונח בשלדה, והתקע בן 3 החוטים של כל מנוע מחובר לשקע הלבן בפינה הקרובה אליו</label></div>
-      <div class="check"><input type="checkbox" id="c1g"><label for="c1g">שתי סוללות 300 מחוברות לשני התקעים הלבנים של הצמה, אחרי שה-USB כבר מחובר ו-Connect לחוץ</label></div>
-      <div class="check"><input type="checkbox" id="c1f"><label for="c1f">לשונית Motors, <b>בלי פרופלורים</b>: מסמנים "I understand…", מעלים מחוון אחד בכל פעם עד 1050–1100, ומורידים חזרה. כל מנוע מסתובב</label></div>
-      <div class="check"><input type="checkbox" id="c1h"><label for="c1h">המנוע שמסתובב תואם לתמונה בלשונית: 1 אחורי-ימני, 2 קדמי-ימני, 3 אחורי-שמאלי, 4 קדמי-שמאלי</label></div>
-      <p class="warn"><span><b>אם מנוע לא מסתובב:</b> עוצרים ומצלמים. ייתכן שבקר המנוע (ESC) ניזוק באזור השרוף בלוח.</span></p>
-      <p class="tip">אחרי הבדיקה מנתקים את הסוללות. מנועי 16000KV על 2S מתחממים מהר בלי פרופלורים, לכן לא משאירים אותם מסתובבים.</p>
+      <div class="check"><input type="checkbox" id="c1c" checked><label for="c1c">גיבוי <code>diff all</code> של 4.0.6 נשמר לקובץ</label></div>
+      <div class="check"><input type="checkbox" id="c1d" checked><label for="c1d">Betaflight עודכן ל-2026.6.2 (CRAZYBEEF4FR, IBUS, Full chip erase)</label></div>
+      <div class="check"><input type="checkbox" id="c1e" checked><label for="c1e">מנוע פגום אותר, וכל 4 המנועים הוחלפו ל-SE0802 19000KV</label></div>
+      <div class="check"><input type="checkbox" id="c1f" checked><label for="c1f"><code>set motor_output_limit = 80</code>, כדי שמנועי 19000KV לא יסתובבו על 2S מהר מדי</label></div>
+      <div class="check"><input type="checkbox" id="c1g" checked><label for="c1g">כל 4 המנועים מסתובבים בלשונית Motors</label></div>
+      <div class="check"><input type="checkbox" id="c1h" checked><label for="c1h">הכיוונים תוקנו: <code>yaw_motors_reversed = ON</code> (props-out), ו-ESC 1 הפוך ב-esc-configurator</label></div>
+      <p class="tip">אם מוסיפים או מחליפים מנועים, בודקים מחדש את הכיוון בווידאו Slo-mo של האייפון, עם נקודת טוש על כיפת המנוע. מנועים באלכסון מסתובבים לאותו כיוון.</p>
     </div>
   </details>
 
@@ -311,7 +310,7 @@ footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); pad
 
 <section id="cli">
   <h2>פקודת Betaflight</h2>
-  <p>מדביקים בלשונית CLI <b>בשלב 2</b>, לא לפני. הפקודה מעבירה את UART2 לקבלת פקודות מה-ESP32, מכבה את המקלט הפנימי, הופכת את ARM כך שיפעל רק כשהערוץ גבוה, ומגדירה עצירת מנועים בניתוק. הגיבוי שלך מאפשר להחזיר הכול אחורה.</p>
+  <p>מדביקים בלשונית CLI <b>בשלב 2</b>, לא לפני. הפקודה מעבירה את UART2 לקבלת פקודות מה-ESP32, מכבה את המקלט הפנימי, הופכת את ARM כך שיפעל רק כשהערוץ גבוה, מגדירה עצירת מנועים בניתוק, ומחזירה את הצפצוף כשהקשר אובד.</p>
   <div class="code"><button type="button" id="copy">העתק</button><pre id="cliText">feature -RX_SPI
 feature RX_SERIAL
 serial 0 0 115200 57600 0 115200
@@ -322,7 +321,11 @@ aux 0 0 0 1700 2100 0 0
 aux 1 1 1 900 1300 0 0
 aux 2 13 2 1700 2100 0 0
 set failsafe_procedure = DROP
-set failsafe_delay = 1
+set failsafe_delay = 2
+set motor_output_limit = 80
+set yaw_motors_reversed = ON
+beeper RX_LOST
+beeper RX_LOST_LANDING
 save</pre></div>
   <p class="tip">אחרי <code>save</code> הלוח מאתחל את עצמו ומתנתק לרגע. זה תקין.</p>
 </section>
@@ -344,7 +347,7 @@ save</pre></div>
 
 <script>
 document.documentElement.dir='rtl'; document.documentElement.lang='he';
-const KEY='mobula7-phase1-v1';
+const KEY='mobula7-phase1-v2';
 const boxes=[...document.querySelectorAll('.check input')];
 const defaults=Object.fromEntries(boxes.map(b=>[b.id,b.defaultChecked]));
 let saved={};
