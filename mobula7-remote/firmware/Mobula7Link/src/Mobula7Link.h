@@ -5,3 +5,4 @@
 #include "link_packet.h"
 #include "rx_link.h"
 #include "tx_controller.h"
+#include "ws_protocol.h"
