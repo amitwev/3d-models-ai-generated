@@ -39,7 +39,7 @@ static void on_recv(const esp_now_recv_info_t*, const uint8_t* data, int len) {
   portEXIT_CRITICAL(&g_mux);
 }
 
-static void start_radio() {
+[[maybe_unused]] static void start_radio() {
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
   esp_wifi_set_promiscuous(true);
@@ -52,7 +52,7 @@ static void start_radio() {
   esp_now_register_recv_cb(on_recv);
 }
 
-static void selftest_channels(uint32_t now, uint16_t out[m7::kNumChannels]) {
+[[maybe_unused]] static void selftest_channels(uint32_t now, uint16_t out[m7::kNumChannels]) {
   m7::safe_channels(out);
   uint32_t phase = now % 4000;  // 1000 -> 2000 -> 1000 over 4 s
   uint32_t v = phase < 2000 ? phase / 2 : (4000 - phase) / 2;
