@@ -247,11 +247,13 @@ footer{color:var(--muted); font-size:14px; border-top:1px solid var(--line); pad
   <details class="step" id="s3" data-step="3">
     <summary><span class="num">3</span><span class="sum-t">השלט והאייפון<small>breadboard · כפתורי ARM ו-KILL · דף שליטה</small></span><span class="count"></span></summary>
     <div class="body">
-      <div class="check"><input type="checkbox" id="c3a"><label for="c3a">צריבת הקוד ל-ESP32 "TX"</label></div>
-      <div class="check"><input type="checkbox" id="c3b"><label for="c3b">כפתור מקלדת בין <span class="pin">GPIO25</span> ל-GND (זה ARM), וכפתור בין <span class="pin">GPIO26</span> ל-GND (זה KILL)</label></div>
-      <div class="check"><input type="checkbox" id="c3c"><label for="c3c">האייפון מתחבר לרשת של השלט, ופותח <code>http://192.168.4.1</code></label></div>
+      <div class="check"><input type="checkbox" id="c3f"><label for="c3f">התקנת הספרייה <b>WebSockets by Markus Sattler</b> ב-Library Manager</label></div>
+      <div class="check"><input type="checkbox" id="c3b"><label for="c3b">כפתור ARM בין <span class="pin">D25</span> ל-GND, וכפתור KILL בין <span class="pin">D26</span> ל-GND, ב-ESP32 של השלט</label></div>
+      <div class="check"><input type="checkbox" id="c3a"><label for="c3a">צריבת <code>mobula7_tx.ino</code> (Upload Speed 115200). ב-Serial Monitor מופיע <code>Wi-Fi "Mobula7-Remote"</code></label></div>
+      <div class="check"><input type="checkbox" id="c3c"><label for="c3c">האייפון מתחבר ל-Wi-Fi <b>Mobula7-Remote</b> (סיסמה <code>mobula7fly</code>), ופותח את <code>http://192.168.4.1</code>. הדף מציג "נעול – לחץ ARM בשלט"</label></div>
+      <div class="check"><input type="checkbox" id="c3g"><label for="c3g">ה-ESP32 של הרחפן נצרב מחדש עם <code>RX_SELFTEST 0</code>, וה-LED שלו דולק קבוע כשהשלט פועל</label></div>
       <div class="check"><input type="checkbox" id="c3d"><label for="c3d">המקלות במסך מזיזים את Roll, Pitch, Throttle ו-Yaw בלשונית Receiver</label></div>
-      <div class="check"><input type="checkbox" id="c3e"><label for="c3e">החזקת ARM חצי שנייה, כשהגז למטה, מעלה את AUX1. לחיצה על KILL מורידה אותו</label></div>
+      <div class="check"><input type="checkbox" id="c3e"><label for="c3e">החזקת ARM חצי שנייה, כשהגז למטה, מעלה את AUX1 ל-2000, והדף מציג "חמוש". לחיצה על KILL מורידה אותו</label></div>
     </div>
   </details>
 
