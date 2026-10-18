@@ -9,7 +9,7 @@
 
 // 1 = ignore the radio and sweep the Roll channel slowly (bench test, step 2).
 // 0 = normal operation.
-#define RX_SELFTEST 1
+#define RX_SELFTEST 0
 
 #include <Mobula7Link.h>
 #include <WiFi.h>
