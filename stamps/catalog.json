@@ -229,6 +229,32 @@
         "depth_mm": 0.6
       },
       "notes": "Rounded, heavier strokes - may release from clay more cleanly. 2 mm relief. Same as 002 with the word Vered."
+    },
+    {
+      "id": "009",
+      "slug": "vered_round",
+      "shape": "round",
+      "text": "ורד",
+      "rtl": true,
+      "font": "Rubik-Bold.ttf",
+      "diameter_mm": 32,
+      "height_mm": 20,
+      "relief_mm": 2.0,
+      "margin_mm": 2.5,
+      "layout": {
+        "text_box": [
+          0,
+          0,
+          22,
+          12
+        ]
+      },
+      "id_label": {
+        "font": "Rubik-Bold.ttf",
+        "height_mm": 5,
+        "depth_mm": 0.6
+      },
+      "notes": "Round, text only (no flower, no rim). 2 mm relief."
     }
   ]
 }
