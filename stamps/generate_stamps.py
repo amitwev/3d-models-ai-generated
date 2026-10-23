@@ -123,6 +123,15 @@ def fit_box(shape, cx, cy, max_w, max_h):
     return affinity.translate(fit_text(shape, max_w, max_h), cx, cy)
 
 
+def _almond(length, width, sharpness=0.8):
+    """A pointed, petal/leaf shape from (0, 0) to (length, 0)."""
+    t = np.linspace(0, 1, 25)
+    half = width / 2 * np.sin(np.pi * t) ** sharpness
+    outline = [(length * a, b) for a, b in zip(t, half)]
+    outline += [(length * a, -b) for a, b in zip(t[::-1], half[::-1])]
+    return Polygon(outline).buffer(0)
+
+
 def sunflower_shape(r, petals=12, seed_d=0.7, seed_pitch=1.15, gap=0.6):
     """A sunflower of outer radius r (mm), centered on the origin.
 
@@ -134,11 +143,7 @@ def sunflower_shape(r, petals=12, seed_d=0.7, seed_pitch=1.15, gap=0.6):
     length = r - r_in
     # Petal width leaves a ~0.5 mm groove between neighbours at mid-length.
     width = 2 * np.pi * (r_in + length / 2) / petals - 0.5
-    t = np.linspace(0, 1, 25)
-    half = width / 2 * np.sin(np.pi * t) ** 0.8
-    outline = [(r_in + length * a, b) for a, b in zip(t, half)]
-    outline += [(r_in + length * a, -b) for a, b in zip(t[::-1], half[::-1])]
-    petal = Polygon(outline).buffer(0)
+    petal = affinity.translate(_almond(length, width), r_in)
     flower = unary_union([affinity.rotate(petal, 360 * i / petals, origin=(0, 0))
                           for i in range(petals)])
     center = Polygon([(center_r * np.cos(a), center_r * np.sin(a))
@@ -155,7 +160,29 @@ def sunflower_shape(r, petals=12, seed_d=0.7, seed_pitch=1.15, gap=0.6):
     return flower.union(center.difference(unary_union(seeds)))
 
 
-MOTIFS = {"sunflower": sunflower_shape}
+def sunflower_stem_shape(r, stem_mm, stem_w=1.3, leaf_len=None, leaf_w=None):
+    """A sunflower head of radius r centered on the origin, like the emoji:
+    a stem hanging down stem_mm below the head with two leaves on it."""
+    leaf_len = leaf_len or 0.95 * r
+    leaf_w = leaf_w or 0.45 * r
+    bottom = -r - stem_mm
+    stem = Polygon([(-stem_w / 2, -r + 0.5), (stem_w / 2, -r + 0.5),
+                    (stem_w / 2, bottom), (-stem_w / 2, bottom)])
+    vein_w = 0.45
+    leaves = []
+    # One leaf per side, angled upwards, the left one a bit lower (as in 🌻).
+    for side, frac in ((-1, 0.6), (1, 0.35)):
+        leaf = _almond(leaf_len, leaf_w, sharpness=0.65)
+        vein = Polygon([(0.15 * leaf_len, -vein_w / 2), (0.75 * leaf_len, -vein_w / 2),
+                        (0.75 * leaf_len, vein_w / 2), (0.15 * leaf_len, vein_w / 2)])
+        leaf = leaf.difference(vein)
+        angle = 35 if side > 0 else 145
+        leaf = affinity.rotate(leaf, angle, origin=(0, 0))
+        leaves.append(affinity.translate(leaf, 0, -r - frac * stem_mm))
+    return unary_union([sunflower_shape(r), stem] + leaves)
+
+
+MOTIFS = {"sunflower": sunflower_shape, "sunflower_stem": sunflower_stem_shape}
 
 
 def outline_shape(stamp, inset=0.0):
@@ -180,7 +207,8 @@ def face_shape(stamp):
     motif = layout.get("motif")
     if motif:
         cx, cy, r = motif["center_r"]
-        parts.append(affinity.translate(MOTIFS[motif["type"]](r), cx, cy))
+        shape = MOTIFS[motif["type"]](r, **motif.get("options", {}))
+        parts.append(affinity.translate(shape, cx, cy))
     border = stamp.get("border")
     if border:
         outer = outline_shape(stamp, border["inset_mm"])
@@ -267,7 +295,7 @@ def render_preview(stamp, face, imprint, label, base_h, path):
         w = d = stamp["diameter_mm"]
     else:
         w, d = stamp["width_mm"], stamp["depth_mm"]
-    fig, axes = plt.subplots(1, 3, figsize=(12, 4.5 if round_ else 3.6))
+    fig, axes = plt.subplots(1, 3, figsize=(12, 3.6 if w > 1.4 * d else 5))
     h = stamp["height_mm"]
     panels = [
         (axes[0], face, "Stamp face (mirrored, top view)", (-d / 2, d), "#d9d9d9", "#333333"),
