@@ -193,6 +193,42 @@
         "depth_mm": 0.6
       },
       "notes": "Round seal: name on top, sunflower with stem and leaves below. 3 mm relief. Same as 004 without the border."
+    },
+    {
+      "id": "007",
+      "slug": "vered_alef-bold",
+      "text": "ורד",
+      "rtl": true,
+      "font": "Alef-Bold.ttf",
+      "width_mm": 30,
+      "depth_mm": 20,
+      "height_mm": 20,
+      "relief_mm": 2.0,
+      "margin_mm": 2.5,
+      "id_label": {
+        "font": "Rubik-Bold.ttf",
+        "height_mm": 5,
+        "depth_mm": 0.6
+      },
+      "notes": "Classic Hebrew sans, bold. 2 mm relief. Same as 001 with the word Vered."
+    },
+    {
+      "id": "008",
+      "slug": "vered_rubik-bold",
+      "text": "ורד",
+      "rtl": true,
+      "font": "Rubik-Bold.ttf",
+      "width_mm": 30,
+      "depth_mm": 20,
+      "height_mm": 20,
+      "relief_mm": 2.0,
+      "margin_mm": 2.5,
+      "id_label": {
+        "font": "Rubik-Bold.ttf",
+        "height_mm": 5,
+        "depth_mm": 0.6
+      },
+      "notes": "Rounded, heavier strokes - may release from clay more cleanly. 2 mm relief. Same as 002 with the word Vered."
     }
   ]
 }
