@@ -46,7 +46,7 @@
       "width_mm": 28,
       "depth_mm": 40,
       "height_mm": 20,
-      "relief_mm": 2.0,
+      "relief_mm": 3.0,
       "margin_mm": 2.5,
       "border": {
         "inset_mm": 0.8,
@@ -76,7 +76,7 @@
         "height_mm": 5,
         "depth_mm": 0.6
       },
-      "notes": "Rectangular (portrait): name on top, sunflower with stem and leaves below, raised frame. 2 mm relief."
+      "notes": "Rectangular (portrait): name on top, sunflower with stem and leaves below, raised frame. 3 mm relief."
     },
     {
       "id": "004",
@@ -87,7 +87,7 @@
       "font": "Rubik-Bold.ttf",
       "diameter_mm": 38,
       "height_mm": 20,
-      "relief_mm": 2.0,
+      "relief_mm": 3.0,
       "margin_mm": 2.5,
       "border": {
         "inset_mm": 0.8,
@@ -117,7 +117,7 @@
         "height_mm": 5,
         "depth_mm": 0.6
       },
-      "notes": "Round seal: name on top, sunflower with stem and leaves below, raised rim. 2 mm relief."
+      "notes": "Round seal: name on top, sunflower with stem and leaves below, raised rim. 3 mm relief."
     }
   ]
 }
