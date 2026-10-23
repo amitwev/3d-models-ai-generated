@@ -16,9 +16,11 @@ correctly.
 | 002 | דינה | Rubik Bold (מעוגל) | 30×20×20 מ"מ | 2.0 מ"מ | [STL](stl/002_dina_rubik-bold.stl) | [PNG](stl/002_dina_rubik-bold_preview.png) | _טרם נבדק_ |
 | 003 | דינה + 🌻 עם גבעול ועלים — מלבנית (לאורך) עם מסגרת | Rubik Bold | 28×40×20 מ"מ | 3.0 מ"מ | [STL](stl/003_dina_sunflower_rect.stl) | [PNG](stl/003_dina_sunflower_rect_preview.png) | _טרם נבדק_ |
 | 004 | דינה + 🌻 עם גבעול ועלים — עגולה עם שוליים | Rubik Bold | ⌀38×20 מ"מ | 3.0 מ"מ | [STL](stl/004_dina_sunflower_round.stl) | [PNG](stl/004_dina_sunflower_round_preview.png) | _טרם נבדק_ |
+| 005 | דינה + 🌻 עם גבעול ועלים — מלבנית (לאורך), ללא מסגרת | Rubik Bold | 28×40×20 מ"מ | 3.0 מ"מ | [STL](stl/005_dina_sunflower_rect_noframe.stl) | [PNG](stl/005_dina_sunflower_rect_noframe_preview.png) | _טרם נבדק_ |
+| 006 | דינה + 🌻 עם גבעול ועלים — עגולה, ללא שוליים | Rubik Bold | ⌀38×20 מ"מ | 3.0 מ"מ | [STL](stl/006_dina_sunflower_round_noframe.stl) | [PNG](stl/006_dina_sunflower_round_noframe_preview.png) | _טרם נבדק_ |
 
 הגובה הכולל (20 מ"מ) כולל את התבליט: בסיס 18 מ"מ + אותיות 2 מ"מ
-(ב-003 ו-004: בסיס 17 מ"מ + תבליט 3 מ"מ).
+(ב-003–006: בסיס 17 מ"מ + תבליט 3 מ"מ).
 
 ## הדפסה ב-Bambu Lab P2S
 
