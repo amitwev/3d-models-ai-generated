@@ -14,6 +14,8 @@ correctly.
 |----|------|------|------------------------|-------------|------|-------|---------------|
 | 001 | דינה | Alef Bold | 30×20×20 מ"מ | 2.0 מ"מ | [STL](stl/001_dina_alef-bold.stl) | [PNG](stl/001_dina_alef-bold_preview.png) | _טרם נבדק_ |
 | 002 | דינה | Rubik Bold (מעוגל) | 30×20×20 מ"מ | 2.0 מ"מ | [STL](stl/002_dina_rubik-bold.stl) | [PNG](stl/002_dina_rubik-bold_preview.png) | _טרם נבדק_ |
+| 003 | 🌻 דינה — מלבנית עם מסגרת | Rubik Bold | 42×20×20 מ"מ | 2.0 מ"מ | [STL](stl/003_dina_sunflower_rect.stl) | [PNG](stl/003_dina_sunflower_rect_preview.png) | _טרם נבדק_ |
+| 004 | 🌻 דינה — עגולה עם שוליים | Rubik Bold | ⌀32×20 מ"מ | 2.0 מ"מ | [STL](stl/004_dina_sunflower_round.stl) | [PNG](stl/004_dina_sunflower_round_preview.png) | _טרם נבדק_ |
 
 הגובה הכולל (20 מ"מ) כולל את התבליט: בסיס 18 מ"מ + אותיות 2 מ"מ.
 
@@ -39,6 +41,12 @@ correctly.
    python3 stamps/generate_stamps.py 003      # רק חותמת 003
    ```
 3. הוסיפו שורה לטבלה למעלה.
+
+שדות אופציונליים ב-`catalog.json` (ראו 003–004 כדוגמה):
+- `"shape": "round"` + `diameter_mm` — חותמת עגולה (ברירת מחדל: מלבנית).
+- `"border"` — מסגרת / שוליים בולטים (`inset_mm`, `width_mm`).
+- `"layout"` — מיקום הטקסט (`text_box`: מרכז x, מרכז y, רוחב, גובה, במ"מ,
+  כפי שנראה בהטבעה) ומוטיב (`motif`: `type` = `sunflower`, `center_r`: x, y, רדיוס).
 
 Fonts in [`fonts/`](fonts) are licensed under the SIL Open Font License
 (see the `OFL-*.txt` files). `Rubik-Bold.ttf` is a static wght=700 instance of

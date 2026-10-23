@@ -11,7 +11,11 @@
       "height_mm": 20,
       "relief_mm": 2.0,
       "margin_mm": 2.5,
-      "id_label": {"font": "Rubik-Bold.ttf", "height_mm": 5, "depth_mm": 0.6},
+      "id_label": {
+        "font": "Rubik-Bold.ttf",
+        "height_mm": 5,
+        "depth_mm": 0.6
+      },
       "notes": "Classic Hebrew sans, bold. 2 mm relief."
     },
     {
@@ -25,8 +29,89 @@
       "height_mm": 20,
       "relief_mm": 2.0,
       "margin_mm": 2.5,
-      "id_label": {"font": "Rubik-Bold.ttf", "height_mm": 5, "depth_mm": 0.6},
+      "id_label": {
+        "font": "Rubik-Bold.ttf",
+        "height_mm": 5,
+        "depth_mm": 0.6
+      },
       "notes": "Rounded, heavier strokes - may release from clay more cleanly. 2 mm relief."
+    },
+    {
+      "id": "003",
+      "slug": "dina_sunflower_rect",
+      "shape": "rect",
+      "text": "דינה",
+      "rtl": true,
+      "font": "Rubik-Bold.ttf",
+      "width_mm": 42,
+      "depth_mm": 20,
+      "height_mm": 20,
+      "relief_mm": 2.0,
+      "margin_mm": 2.5,
+      "border": {
+        "inset_mm": 0.8,
+        "width_mm": 1.0
+      },
+      "layout": {
+        "text_box": [
+          -5.5,
+          0,
+          22,
+          11
+        ],
+        "motif": {
+          "type": "sunflower",
+          "center_r": [
+            11.5,
+            0,
+            6.5
+          ]
+        }
+      },
+      "id_label": {
+        "font": "Rubik-Bold.ttf",
+        "height_mm": 5,
+        "depth_mm": 0.6
+      },
+      "notes": "Rectangular: sunflower on the right, name on the left, raised frame. 2 mm relief."
+    },
+    {
+      "id": "004",
+      "slug": "dina_sunflower_round",
+      "shape": "round",
+      "text": "דינה",
+      "rtl": true,
+      "font": "Rubik-Bold.ttf",
+      "diameter_mm": 32,
+      "height_mm": 20,
+      "relief_mm": 2.0,
+      "margin_mm": 2.5,
+      "border": {
+        "inset_mm": 0.8,
+        "width_mm": 1.0
+      },
+      "layout": {
+        "text_box": [
+          0,
+          -5.6,
+          17,
+          6.5
+        ],
+        "motif": {
+          "type": "sunflower",
+          "center_r": [
+            0,
+            5.0,
+            5.6
+          ]
+        }
+      },
+      "id_label": {
+        "font": "Rubik-Bold.ttf",
+        "height_mm": 5,
+        "depth_mm": 0.6
+      },
+      "notes": "Round seal: sunflower on top, name below, raised rim. 2 mm relief."
     }
   ]
 }

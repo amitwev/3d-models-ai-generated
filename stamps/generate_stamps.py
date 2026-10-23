@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Generate numbered clay stamps (STL) from stamps/catalog.json.
 
-Each stamp is a solid block with the text raised on its top face, mirrored,
-so that pressing it into clay leaves a readable imprint. The stamp ID
-(e.g. "001") is engraved, not mirrored, on one long side wall so a printed
-stamp can always be matched back to its catalog entry.
+Each stamp is a solid block (rectangular, or round with "shape": "round")
+with the text raised on its top face, mirrored, so that pressing it into clay
+leaves a readable imprint. Optionally a motif (e.g. a sunflower) and a raised
+border are added next to the text. The stamp ID (e.g. "001") is engraved, not
+mirrored, on the front side wall so a printed stamp can always be matched
+back to its catalog entry.
 
 Usage:
     python3 stamps/generate_stamps.py            # build every stamp
@@ -116,6 +118,76 @@ def fit_text(shape, max_w, max_h):
     return affinity.translate(shape, -(minx + maxx) / 2, -(miny + maxy) / 2)
 
 
+def fit_box(shape, cx, cy, max_w, max_h):
+    """Like fit_text, but centered on (cx, cy)."""
+    return affinity.translate(fit_text(shape, max_w, max_h), cx, cy)
+
+
+def sunflower_shape(r, petals=12, seed_d=0.7, seed_pitch=1.15, gap=0.6):
+    """A sunflower of outer radius r (mm), centered on the origin.
+
+    Pointed petals around a raised center disk, separated from it by a groove;
+    the center has small dimples for the seeds.
+    """
+    center_r = 0.4 * r
+    r_in = center_r + gap
+    length = r - r_in
+    # Petal width leaves a ~0.5 mm groove between neighbours at mid-length.
+    width = 2 * np.pi * (r_in + length / 2) / petals - 0.5
+    t = np.linspace(0, 1, 25)
+    half = width / 2 * np.sin(np.pi * t) ** 0.8
+    outline = [(r_in + length * a, b) for a, b in zip(t, half)]
+    outline += [(r_in + length * a, -b) for a, b in zip(t[::-1], half[::-1])]
+    petal = Polygon(outline).buffer(0)
+    flower = unary_union([affinity.rotate(petal, 360 * i / petals, origin=(0, 0))
+                          for i in range(petals)])
+    center = Polygon([(center_r * np.cos(a), center_r * np.sin(a))
+                      for a in np.linspace(0, 2 * np.pi, 72, endpoint=False)])
+    seeds = []
+    n = int(center_r // seed_pitch) + 1
+    for i in range(-n, n + 1):
+        for j in range(-n, n + 1):
+            x = (i + 0.5 * (j % 2)) * seed_pitch
+            y = j * seed_pitch * np.sqrt(3) / 2
+            if np.hypot(x, y) + seed_d / 2 <= center_r - 0.4:
+                seeds.append(Polygon([(x + seed_d / 2 * np.cos(a), y + seed_d / 2 * np.sin(a))
+                                      for a in np.linspace(0, 2 * np.pi, 16, endpoint=False)]))
+    return flower.union(center.difference(unary_union(seeds)))
+
+
+MOTIFS = {"sunflower": sunflower_shape}
+
+
+def outline_shape(stamp, inset=0.0):
+    """The stamp's footprint (rect or circle) shrunk by inset mm."""
+    if stamp.get("shape", "rect") == "round":
+        r = stamp["diameter_mm"] / 2 - inset
+        return Polygon([(r * np.cos(a), r * np.sin(a))
+                        for a in np.linspace(0, 2 * np.pi, 128, endpoint=False)])
+    w, d = stamp["width_mm"] / 2 - inset, stamp["depth_mm"] / 2 - inset
+    return Polygon([(-w, -d), (w, -d), (w, d), (-w, d)])
+
+
+def face_shape(stamp):
+    """Everything raised on the stamp face, as it should read in the imprint."""
+    font_path = HERE / "fonts" / stamp["font"]
+    text = text_shape(stamp["text"], font_path, stamp.get("rtl", True))
+    layout = stamp.get("layout")
+    if layout is None:
+        w, d, margin = stamp["width_mm"], stamp["depth_mm"], stamp["margin_mm"]
+        return fit_text(text, w - 2 * margin, d - 2 * margin)
+    parts = [fit_box(text, *layout["text_box"])]
+    motif = layout.get("motif")
+    if motif:
+        cx, cy, r = motif["center_r"]
+        parts.append(affinity.translate(MOTIFS[motif["type"]](r), cx, cy))
+    border = stamp.get("border")
+    if border:
+        outer = outline_shape(stamp, border["inset_mm"])
+        parts.append(outer.difference(outline_shape(stamp, border["inset_mm"] + border["width_mm"])))
+    return unary_union(parts)
+
+
 def to_cross_section(shape):
     polys = list(shape.geoms) if isinstance(shape, MultiPolygon) else [shape]
     rings = []
@@ -126,32 +198,42 @@ def to_cross_section(shape):
 
 
 def build(stamp, out_dir):
-    w, d, h = stamp["width_mm"], stamp["depth_mm"], stamp["height_mm"]
+    round_ = stamp.get("shape", "rect") == "round"
+    if round_:
+        w = d = stamp["diameter_mm"]
+    else:
+        w, d = stamp["width_mm"], stamp["depth_mm"]
+    h = stamp["height_mm"]
     relief = stamp["relief_mm"]
-    margin = stamp["margin_mm"]
     base_h = h - relief
 
-    font_path = HERE / "fonts" / stamp["font"]
-    text = fit_text(text_shape(stamp["text"], font_path, stamp.get("rtl", True)),
-                    w - 2 * margin, d - 2 * margin)
+    text = face_shape(stamp)
     # Mirror horizontally: viewed from above (looking at the stamp face) it reads
     # backwards; the imprint in clay reads correctly.
     text_mirrored = affinity.scale(text, -1, 1, origin=(0, 0))
 
-    base = m3d.Manifold.cube([w, d, base_h], center=False).translate([-w / 2, -d / 2, 0])
+    if round_:
+        base = m3d.Manifold.cylinder(base_h, w / 2, w / 2, 128)
+    else:
+        base = m3d.Manifold.cube([w, d, base_h], center=False).translate([-w / 2, -d / 2, 0])
     relief_solid = m3d.Manifold.extrude(to_cross_section(text_mirrored), relief + 0.01)
     relief_solid = relief_solid.translate([0, 0, base_h - 0.01])
     solid = base + relief_solid
 
-    # Engrave the stamp ID (readable, not mirrored) on the front long wall (y = -d/2).
+    # Engrave the stamp ID (readable, not mirrored) on the front wall (y = -d/2).
     id_cfg = stamp.get("id_label", {})
     id_h = id_cfg.get("height_mm", 5.0)
     id_depth = id_cfg.get("depth_mm", 0.6)
     id_font = HERE / "fonts" / id_cfg.get("font", "Rubik-Bold.ttf")
     label = fit_text(text_shape(stamp["id"], id_font, rtl=False), w - 4, id_h)
-    cut = m3d.Manifold.extrude(to_cross_section(label), id_depth + 0.5)
+    wall_y = -d / 2
+    if round_:
+        # Curved wall: measure the depth from where the label's ends meet the wall.
+        lw = label.bounds[2] - label.bounds[0]
+        wall_y = -np.sqrt((w / 2) ** 2 - (lw / 2) ** 2)
+    cut = m3d.Manifold.extrude(to_cross_section(label), id_depth + 0.5 + (wall_y + d / 2))
     # Extruded along +Z; rotate so it points into the wall (+Y), text upright.
-    cut = cut.rotate([90, 0, 0]).translate([0, -d / 2 + id_depth, base_h / 2])
+    cut = cut.rotate([90, 0, 0]).translate([0, wall_y + id_depth, base_h / 2])
     solid = solid - cut
 
     mesh = solid.to_mesh()
@@ -180,8 +262,12 @@ def _fill(ax, shape, **kw):
 
 
 def render_preview(stamp, face, imprint, label, base_h, path):
-    w, d = stamp["width_mm"], stamp["depth_mm"]
-    fig, axes = plt.subplots(1, 3, figsize=(12, 3.6))
+    round_ = stamp.get("shape", "rect") == "round"
+    if round_:
+        w = d = stamp["diameter_mm"]
+    else:
+        w, d = stamp["width_mm"], stamp["depth_mm"]
+    fig, axes = plt.subplots(1, 3, figsize=(12, 4.5 if round_ else 3.6))
     h = stamp["height_mm"]
     panels = [
         (axes[0], face, "Stamp face (mirrored, top view)", (-d / 2, d), "#d9d9d9", "#333333"),
@@ -189,7 +275,10 @@ def render_preview(stamp, face, imprint, label, base_h, path):
         (axes[2], label, "Front side wall (ID engraving)", (0, base_h), "#8fb3d9", "#3d5f85"),
     ]
     for ax, shape, title, (y0, height), bg, fg in panels:
-        ax.add_patch(matplotlib.patches.Rectangle((-w / 2, y0), w, height, color=bg))
+        if round_ and ax is not axes[2]:
+            ax.add_patch(matplotlib.patches.Circle((0, 0), w / 2, color=bg))
+        else:
+            ax.add_patch(matplotlib.patches.Rectangle((-w / 2, y0), w, height, color=bg))
         _fill(ax, shape, color=fg, lw=0)
         ax.set_xlim(-w / 2 - 1, w / 2 + 1)
         ax.set_ylim(y0 - 1, y0 + height + 1)
